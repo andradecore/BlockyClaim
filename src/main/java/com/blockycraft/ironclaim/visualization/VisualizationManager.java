@@ -62,7 +62,7 @@ public class VisualizationManager {
 
         World world = player.getWorld();
         List<Location> cornerLocations = new ArrayList<>();
-        int y = player.getLocation().getBlockY();
+        int y = player.getLocation().getBlockY() -1;
 
         cornerLocations.add(new Location(world, claim.getMinX(), y, claim.getMinZ()));
         cornerLocations.add(new Location(world, claim.getMaxX(), y, claim.getMinZ()));
