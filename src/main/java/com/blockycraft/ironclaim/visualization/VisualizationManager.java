@@ -37,19 +37,30 @@ public class VisualizationManager {
     private void checkPlayers() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             Material claimTool = plugin.getConfigManager().getFerramentaClaim();
-            Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
+            Claim claim = plugin.getClaimManager().getNearbyClaim(player.getLocation(), 10); // Nova lógica
 
             boolean isHoldingTool = player.getItemInHand().getType() == claimTool;
 
-            // CORREÇÃO: Estrutura mais explícita para a verificação de nulo
             if (isHoldingTool && claim != null) {
-                // Dentro deste bloco, 'claim' NUNCA será nulo. O aviso desaparecerá.
-                String claimId = claim.getOwnerName() + ";" + claim.getClaimName();
-                if (!claimId.equals(currentlyVisualizing.get(player.getName()))) {
-                    showBorders(player, claim);
+                Location playerLoc = player.getLocation();
+
+                int dx = Math.max(claim.getMinX() - playerLoc.getBlockX(), playerLoc.getBlockX() - claim.getMaxX());
+                int dz = Math.max(claim.getMinZ() - playerLoc.getBlockZ(), playerLoc.getBlockZ() - claim.getMaxZ());
+                dx = Math.max(dx, 0);
+                dz = Math.max(dz, 0);
+                double distance = Math.sqrt(dx * dx + dz * dz);
+
+                if (distance <= 10) {
+                    String claimId = claim.getOwnerName() + ";" + claim.getClaimName();
+                    if (!claimId.equals(currentlyVisualizing.get(player.getName()))) {
+                        showBorders(player, claim);
+                    }
+                } else {
+                    if (currentlyVisualizing.containsKey(player.getName())) {
+                        clearBorders(player);
+                    }
                 }
             } else {
-                // Se o jogador não está segurando a ferramenta OU não está dentro de uma claim
                 if (currentlyVisualizing.containsKey(player.getName())) {
                     clearBorders(player);
                 }
@@ -62,7 +73,7 @@ public class VisualizationManager {
 
         World world = player.getWorld();
         List<Location> cornerLocations = new ArrayList<>();
-        int y = player.getLocation().getBlockY() -1;
+        int y = player.getLocation().getBlockY() - 1; // 1 bloco abaixo
 
         cornerLocations.add(new Location(world, claim.getMinX(), y, claim.getMinZ()));
         cornerLocations.add(new Location(world, claim.getMaxX(), y, claim.getMinZ()));
@@ -84,7 +95,7 @@ public class VisualizationManager {
     public void clearBorders(Player player) {
         String playerName = player.getName();
         Set<OriginalBlockState> originalBlocks = activeVisualizations.remove(playerName);
-        
+
         if (originalBlocks != null) {
             for (OriginalBlockState state : originalBlocks) {
                 player.sendBlockChange(state.getLocation(), state.getMaterial(), state.getData());

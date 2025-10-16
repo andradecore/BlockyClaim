@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class ClaimManager {
-    
+
     private List<Claim> claims;
     private File claimsFile;
     private Properties claimProps;
@@ -32,7 +32,24 @@ public class ClaimManager {
         }
         return null;
     }
-    
+
+    // NOVO MÉTODO: Retorna a primeira claim próxima à localização, dentro do raio (ex: 10 blocos)
+    public Claim getNearbyClaim(Location playerLoc, int distance) {
+        String worldName = playerLoc.getWorld().getName();
+        for (Claim claim : claims) {
+            if (!claim.getWorldName().equals(worldName)) continue; // Mundial correto
+            int dx = Math.max(claim.getMinX() - playerLoc.getBlockX(), playerLoc.getBlockX() - claim.getMaxX());
+            int dz = Math.max(claim.getMinZ() - playerLoc.getBlockZ(), playerLoc.getBlockZ() - claim.getMaxZ());
+            dx = Math.max(dx, 0);
+            dz = Math.max(dz, 0);
+            double dist = Math.sqrt(dx * dx + dz * dz);
+            if (dist <= distance) {
+                return claim;
+            }
+        }
+        return null;
+    }
+
     public List<Claim> getClaimsByOwner(String ownerName) {
         List<Claim> ownerClaims = new ArrayList<Claim>();
         for (Claim claim : claims) {
@@ -42,13 +59,13 @@ public class ClaimManager {
         }
         return ownerClaims;
     }
-    
+
     public boolean isAreaClaimed(Location pos1, Location pos2) {
         int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
         int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
         int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        
+
         for (Claim existingClaim : claims) {
             if (existingClaim.getWorldName().equals(pos1.getWorld().getName())) {
                 if (minX <= existingClaim.getMaxX() && maxX >= existingClaim.getMinX() &&
@@ -88,7 +105,7 @@ public class ClaimManager {
 
     public void loadClaims() {
         if (!claimsFile.exists()) return;
-        
+
         try (FileInputStream fis = new FileInputStream(claimsFile)) {
             claimProps.load(fis);
             for (String key : claimProps.stringPropertyNames()) {
