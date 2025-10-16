@@ -1,5 +1,16 @@
-name:
-main: com.blockycraft.meuplugin.ClassePrincipal
+name: IronClaim
+main: com.blockycraft.ironclaim.IronClaim
 version: 1.0
 author: Bernardo Zukerman
-description:
+description: Plugin de protecao de terreno com economia baseada em ferro.
+
+commands:
+  claim:
+    description: Compra e gerencia blocos de protecao.
+    usage: /claim <comprar|saldo|confirm>
+  trust:
+    description: Concede permissao a um jogador em seu terreno.
+    usage: /trust <jogador>
+  untrust:
+    description: Remove a permissao de um jogador em seu terreno.
+    usage: /untrust <jogador>
