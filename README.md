@@ -13,27 +13,6 @@ BlockyClaim é um plugin de proteção de terras para servidores Minecraft basea
 - `blockyclaim.trust` — Permite usar `/trust`.
 - `blockyclaim.untrust` — Permite usar `/untrust`.
 
-## Comandos e Funcionamento
-
-### `/claim <subcomando>`
-Sistema para criar, verificar, listar, vender, comprar e confirmar áreas reivindicadas.
-
-**Principais subcomandos:**
-- `/claim comprar` — Compra o bloco de proteção onde o jogador está, descontando ferro do saldo.
-- `/claim saldo` — Exibe a quantidade de blocos de proteção disponíveis.
-- `/claim lista` — Lista todas as áreas protegidas do jogador.
-- `/claim vender` — Coloca uma das áreas do jogador à venda.
-- `/claim comprar <player>` — Compra área à venda de outro jogador.
-- `/claim confirmar` — Confirma uma ação de compra ou venda.
-- `/claim ocupar` — Permite ocupar área protegida quando possível.
-- `/claim` — Exibe informações gerais de uso.
-
-### `/trust <jogador>`
-Concede permissão para outro jogador construir ou editar dentro dos seus claims.
-
-### `/untrust <jogador>`
-Remove a permissão previamente concedida.
-
 ## Funcionamento do Sistema
 - Blocos de proteção podem ser adquiridos utilizando ferro como moeda.
 - Áreas podem ser vendidas e compradas entre jogadores.
