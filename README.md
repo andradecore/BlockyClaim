@@ -54,7 +54,6 @@ Listeners interceptam eventos de construção, destruição, explosão (incluind
   Permite ocupar uma área que está abandonada (sem dono ativo).
 
 - `/claim`
-
   Exibe informações e instruções gerais de uso.
 
 ### Trust
