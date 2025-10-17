@@ -1,6 +1,6 @@
-package com.blockycraft.ironclaim.config;
+package com.blockycraft.blockyclaim.config;
 
-import com.blockycraft.ironclaim.IronClaim;
+import com.blockycraft.blockyclaim.BlockyClaim;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
@@ -15,17 +15,16 @@ public class ConfigManager {
 
     private Properties props = new Properties();
 
-    public ConfigManager(IronClaim plugin) {
+    public ConfigManager(BlockyClaim plugin) {
         File configFile = new File(plugin.getDataFolder(), "config.properties");
         
         if (!configFile.exists()) {
             plugin.getDataFolder().mkdirs();
-            // CORREÇÃO: Usa o ClassLoader para pegar o recurso de dentro do .jar
-            try (InputStream in = IronClaim.class.getClassLoader().getResourceAsStream("config.properties");
+            try (InputStream in = BlockyClaim.class.getClassLoader().getResourceAsStream("config.properties");
                  FileOutputStream out = new FileOutputStream(configFile)) {
                 
                 if (in == null) {
-                    System.out.println("[IronClaim] ERRO: config.properties nao encontrado no .jar!");
+                    System.out.println("[BlockyClaim] ERRO: config.properties nao encontrado no .jar!");
                     return;
                 }
                 
@@ -83,10 +82,16 @@ public class ConfigManager {
 
     public int getTamanhoMinimoClaim() { return getInt("regras.tamanho-minimo-claim", 100); }
     public int getMaxClaimsPorJogador() { return getInt("regras.max-claims-por-jogador", 5); }
+    
+    // --- MÉTODOS NOVOS ---
+    public int getDiasParaAbandono() { return getInt("regras.dias-para-abandono", 30); }
+    public int getPercentualPrecoOcupar() { return getInt("economia.percentual-preco-ocupar", 30); }
+    // --- FIM DOS MÉTODOS NOVOS ---
+
     public boolean isAvisoFronteiraAtivado() { return getBoolean("funcionalidades.avisar-ao-entrar-na-claim", true); }
 
     public String getMsg(String path, String defaultValue) {
-        String prefix = getString("mensagens.prefixo", "&6[IronClaim] &r");
+        String prefix = getString("mensagens.prefixo", "&6[BlockyClaim] &r");
         String message = getString("mensagens." + path, defaultValue);
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
     }

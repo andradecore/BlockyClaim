@@ -1,6 +1,6 @@
-package com.blockycraft.ironclaim.managers; // Certifique-se que o pacote é 'managers'
+package com.blockycraft.blockyclaim.managers;
 
-import com.blockycraft.ironclaim.IronClaim;
+import com.blockycraft.blockyclaim.BlockyClaim;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,14 +12,27 @@ import java.util.Properties;
 public class PlayerDataManager {
     
     private Map<String, Integer> claimBlocks;
+    private Map<String, Long> lastLoginTimes; // <-- NOVO MAPA PARA ÚLTIMO LOGIN
     private File playerDataFile;
     private Properties playerProps;
 
-    public PlayerDataManager(IronClaim plugin) {
+    public PlayerDataManager(BlockyClaim plugin) {
         this.claimBlocks = new HashMap<String, Integer>();
+        this.lastLoginTimes = new HashMap<String, Long>(); // <-- INICIALIZA O NOVO MAPA
         this.playerDataFile = new File(plugin.getDataFolder(), "playerdata.properties");
         this.playerProps = new Properties();
     }
+
+    // --- NOVOS MÉTODOS PARA GERENCIAR O LOGIN ---
+    public void updateLastLogin(String playerName) {
+        lastLoginTimes.put(playerName.toLowerCase(), System.currentTimeMillis());
+    }
+
+    public long getLastLogin(String playerName) {
+        Long lastLogin = lastLoginTimes.get(playerName.toLowerCase());
+        return lastLogin != null ? lastLogin : 0;
+    }
+    // --- FIM DOS NOVOS MÉTODOS ---
     
     public boolean hasPlayerData(String playerName) {
         return claimBlocks.containsKey(playerName.toLowerCase());
@@ -46,12 +59,17 @@ public class PlayerDataManager {
     public void savePlayerData() {
         try (FileOutputStream fos = new FileOutputStream(playerDataFile)) {
             playerProps.clear();
+            // Salva os blocos de claim
             for (Map.Entry<String, Integer> entry : claimBlocks.entrySet()) {
-                playerProps.setProperty(entry.getKey(), entry.getValue().toString());
+                playerProps.setProperty("blocks." + entry.getKey(), entry.getValue().toString());
             }
-            playerProps.store(fos, "Player Claim Blocks Data");
+            // Salva os timestamps de último login
+            for (Map.Entry<String, Long> entry : lastLoginTimes.entrySet()) {
+                playerProps.setProperty("login." + entry.getKey(), entry.getValue().toString());
+            }
+            playerProps.store(fos, "Player Data (Claim Blocks and Last Login)");
         } catch (IOException e) {
-            System.out.println("[IronClaim] Erro ao salvar dados dos jogadores!");
+            System.out.println("[BlockyClaim] Erro ao salvar dados dos jogadores!");
             e.printStackTrace();
         }
     }
@@ -66,16 +84,22 @@ public class PlayerDataManager {
 
         try (FileInputStream fis = new FileInputStream(playerDataFile)) {
             playerProps.load(fis);
-            for (String playerName : playerProps.stringPropertyNames()) {
+            for (String key : playerProps.stringPropertyNames()) {
+                String playerName = key.substring(key.indexOf('.') + 1);
                 try {
-                    int blocks = Integer.parseInt(playerProps.getProperty(playerName));
-                    claimBlocks.put(playerName.toLowerCase(), blocks);
+                    if (key.startsWith("blocks.")) {
+                        int blocks = Integer.parseInt(playerProps.getProperty(key));
+                        claimBlocks.put(playerName.toLowerCase(), blocks);
+                    } else if (key.startsWith("login.")) {
+                        long loginTime = Long.parseLong(playerProps.getProperty(key));
+                        lastLoginTimes.put(playerName.toLowerCase(), loginTime);
+                    }
                 } catch (NumberFormatException e) {
-                    System.out.println("[IronClaim] Erro ao carregar dados do jogador: " + playerName);
+                    System.out.println("[BlockyClaim] Erro ao carregar dados do jogador: " + playerName);
                 }
             }
         } catch (IOException e) {
-            System.out.println("[IronClaim] Erro ao carregar dados dos jogadores!");
+            System.out.println("[BlockyClaim] Erro ao carregar dados dos jogadores!");
             e.printStackTrace();
         }
     }

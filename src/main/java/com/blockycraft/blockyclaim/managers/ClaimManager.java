@@ -1,7 +1,7 @@
-package com.blockycraft.ironclaim.managers;
+package com.blockycraft.blockyclaim.managers;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.data.Claim;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.data.Claim;
 import org.bukkit.Location;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,17 +11,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class ClaimManager {
-
+    
+    private final BlockyClaim plugin;
     private List<Claim> claims;
     private File claimsFile;
     private Properties claimProps;
 
-    public ClaimManager(IronClaim plugin) {
+    public ClaimManager(BlockyClaim plugin) {
+        this.plugin = plugin;
         this.claims = new ArrayList<Claim>();
         this.claimsFile = new File(plugin.getDataFolder(), "claims.properties");
         this.claimProps = new Properties();
+    }
+
+    public boolean isAbandoned(Claim claim) {
+        int diasParaAbandono = plugin.getConfigManager().getDiasParaAbandono();
+        if (diasParaAbandono <= 0) {
+            return false;
+        }
+        long ultimoLogin = plugin.getPlayerDataManager().getLastLogin(claim.getOwnerName());
+        if (ultimoLogin == 0) {
+            return false;
+        }
+        long tempoInativoMillis = System.currentTimeMillis() - ultimoLogin;
+        long diasInativo = TimeUnit.MILLISECONDS.toDays(tempoInativoMillis);
+        return diasInativo >= diasParaAbandono;
     }
 
     public Claim getClaimAt(Location location) {
@@ -33,11 +50,10 @@ public class ClaimManager {
         return null;
     }
 
-    // NOVO MÉTODO: Retorna a primeira claim próxima à localização, dentro do raio (ex: 10 blocos)
     public Claim getNearbyClaim(Location playerLoc, int distance) {
         String worldName = playerLoc.getWorld().getName();
         for (Claim claim : claims) {
-            if (!claim.getWorldName().equals(worldName)) continue; // Mundial correto
+            if (!claim.getWorldName().equals(worldName)) continue;
             int dx = Math.max(claim.getMinX() - playerLoc.getBlockX(), playerLoc.getBlockX() - claim.getMaxX());
             int dz = Math.max(claim.getMinZ() - playerLoc.getBlockZ(), playerLoc.getBlockZ() - claim.getMaxZ());
             dx = Math.max(dx, 0);
@@ -65,7 +81,6 @@ public class ClaimManager {
         int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
         int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-
         for (Claim existingClaim : claims) {
             if (existingClaim.getWorldName().equals(pos1.getWorld().getName())) {
                 if (minX <= existingClaim.getMaxX() && maxX >= existingClaim.getMinX() &&
@@ -92,20 +107,21 @@ public class ClaimManager {
                                     claim.getWorldName() + ";" +
                                     claim.getMinX() + ";" + claim.getMaxX() + ";" +
                                     claim.getMinZ() + ";" + claim.getMaxZ() + ";" +
+                                    claim.isForSale() + ";" +
+                                    claim.getSalePrice() + ";" +
                                     trusted;
                 claimProps.setProperty("claim." + i, serialized);
                 i++;
             }
             claimProps.store(fos, "Claim Data");
         } catch (IOException e) {
-            System.out.println("[IronClaim] Erro ao salvar claims!");
+            System.out.println("[BlockyClaim] Erro ao salvar claims!");
             e.printStackTrace();
         }
     }
 
     public void loadClaims() {
         if (!claimsFile.exists()) return;
-
         try (FileInputStream fis = new FileInputStream(claimsFile)) {
             claimProps.load(fis);
             for (String key : claimProps.stringPropertyNames()) {
@@ -121,18 +137,20 @@ public class ClaimManager {
                         int maxX = Integer.parseInt(parts[5]);
                         int minZ = Integer.parseInt(parts[6]);
                         int maxZ = Integer.parseInt(parts[7]);
+                        boolean forSale = Boolean.parseBoolean(parts[8]);
+                        int salePrice = Integer.parseInt(parts[9]);
                         List<String> trusted = new ArrayList<String>();
-                        if (parts.length > 8 && !parts[8].isEmpty()) {
-                            trusted.addAll(Arrays.asList(parts[8].split(",")));
+                        if (parts.length > 10 && !parts[10].isEmpty()) {
+                            trusted.addAll(Arrays.asList(parts[10].split(",")));
                         }
-                        claims.add(new Claim(owner, claimName, creationDate, world, minX, maxX, minZ, maxZ, trusted));
+                        claims.add(new Claim(owner, claimName, creationDate, world, minX, maxX, minZ, maxZ, forSale, salePrice, trusted));
                     } catch (Exception e) {
-                        System.out.println("[IronClaim] Erro ao carregar claim (formato invalido): " + s);
+                        System.out.println("[BlockyClaim] Erro ao carregar claim (formato invalido): " + s);
                     }
                 }
             }
         } catch (IOException e) {
-            System.out.println("[IronClaim] Erro ao carregar claims!");
+            System.out.println("[BlockyClaim] Erro ao carregar claims!");
             e.printStackTrace();
         }
     }

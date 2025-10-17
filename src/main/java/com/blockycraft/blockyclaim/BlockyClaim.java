@@ -1,18 +1,18 @@
-package com.blockycraft.ironclaim;
+package com.blockycraft.blockyclaim;
 
-import com.blockycraft.ironclaim.commands.CommandManager;
-import com.blockycraft.ironclaim.config.ConfigManager;
-import com.blockycraft.ironclaim.listeners.*;
-import com.blockycraft.ironclaim.managers.ClaimManager;
-import com.blockycraft.ironclaim.managers.PlayerDataManager;
-import com.blockycraft.ironclaim.visualization.VisualizationManager;
+import com.blockycraft.blockyclaim.commands.CommandManager;
+import com.blockycraft.blockyclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.listeners.*;
+import com.blockycraft.blockyclaim.managers.ClaimManager;
+import com.blockycraft.blockyclaim.managers.PlayerDataManager;
+import com.blockycraft.blockyclaim.visualization.VisualizationManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class IronClaim extends JavaPlugin {
+public class BlockyClaim extends JavaPlugin {
 
     private ConfigManager configManager;
     private ClaimManager claimManager;
@@ -34,7 +34,7 @@ public class IronClaim extends JavaPlugin {
         
         this.visualizationManager.start();
 
-        System.out.println("[IronClaim] Plugin ativado com sucesso!");
+        System.out.println("[BlockyClaim] Plugin ativado com sucesso!");
     }
 
     private void registerListeners() {
@@ -49,7 +49,7 @@ public class IronClaim extends JavaPlugin {
         pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
         pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this); // <-- Proteção contra Creeper
 
-        System.out.println("[IronClaim] Listeners de eventos registrados.");
+        System.out.println("[BlockyClaim] Listeners de eventos registrados.");
     }
 
     private void registerCommands() {
@@ -57,7 +57,7 @@ public class IronClaim extends JavaPlugin {
         getCommand("claim").setExecutor(commandManager);
         getCommand("trust").setExecutor(commandManager);
         getCommand("untrust").setExecutor(commandManager);
-        System.out.println("[IronClaim] Comandos registrados.");
+        System.out.println("[BlockyClaim] Comandos registrados.");
     }
 
     @Override
@@ -70,7 +70,7 @@ public class IronClaim extends JavaPlugin {
         
         this.playerDataManager.savePlayerData();
         this.claimManager.saveClaims();
-        System.out.println("[IronClaim] Plugin desativado.");
+        System.out.println("[BlockyClaim] Plugin desativado.");
     }
 
     // Getters para todos os managers

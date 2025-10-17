@@ -1,7 +1,7 @@
-package com.blockycraft.ironclaim.listeners;
+package com.blockycraft.blockyclaim.listeners;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.config.ConfigManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,10 +13,10 @@ import java.util.Map;
 
 public class ClaimToolListener extends PlayerListener {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
     private static final Map<String, Location[]> pendingConfirmations = new HashMap<String, Location[]>();
 
-    public ClaimToolListener(IronClaim plugin) {
+    public ClaimToolListener(BlockyClaim plugin) {
         this.plugin = plugin;
     }
     

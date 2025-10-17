@@ -1,11 +1,11 @@
-package com.blockycraft.ironclaim.commands;
+package com.blockycraft.blockyclaim.commands;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.config.ConfigManager;
-import com.blockycraft.ironclaim.data.Claim;
-import com.blockycraft.ironclaim.listeners.ClaimToolListener;
-import com.blockycraft.ironclaim.managers.ClaimManager;
-import com.blockycraft.ironclaim.managers.PlayerDataManager;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.data.Claim;
+import com.blockycraft.blockyclaim.listeners.ClaimToolListener;
+import com.blockycraft.blockyclaim.managers.ClaimManager;
+import com.blockycraft.blockyclaim.managers.PlayerDataManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,9 +19,9 @@ import java.util.Map;
 
 public class CommandManager implements CommandExecutor {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
 
-    public CommandManager(IronClaim plugin) {
+    public CommandManager(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 
@@ -49,15 +49,19 @@ public class CommandManager implements CommandExecutor {
     private boolean handleClaimCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         if (args.length == 0) {
-            // Remove o prefixo do plugin para formatar a ajuda
+            // CORREÇÃO: Pede as chaves sem o prefixo "mensagens."
             String prefix = cfg.getMsg("prefixo", "");
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda IronClaim ---").replace(prefix, "")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- Mostra seus blocos.")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- Compra blocos.")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- Confirma um terreno.")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- Lista suas claims ou de outro jogador.")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- Da permissao a um amigo.")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- Remove a permissao.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---").replace(prefix, "")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.occupy", "&b/claim occupy <novo-nome> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell <preco> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.buy", "&b/claim buy <novo-nome> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- ...")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- ...")));
             return true;
         }
 
@@ -114,11 +118,150 @@ public class CommandManager implements CommandExecutor {
         if (subCommand.equals("list")) {
             return handleListCommand(player, args);
         }
+
+        if (subCommand.equals("occupy")) {
+            return handleOccupyCommand(player, args);
+        }
+        
+        if (subCommand.equals("sell")) {
+            return handleSellCommand(player, args);
+        }
+        if (subCommand.equals("buy")) {
+            return handleBuyCommand(player, args);
+        }
+        if (subCommand.equals("unsell")) {
+            return handleUnsellCommand(player, args);
+        }
         
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
         return true;
     }
-    
+
+    private boolean handleSellCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        ClaimManager claimManager = plugin.getClaimManager();
+        
+        if (args.length < 2) {
+            player.sendMessage(cfg.getMsg("ajuda.sell", "&cUse: /claim sell <preco>"));
+            return true;
+        }
+
+        Claim claim = claimManager.getClaimAt(player.getLocation());
+        if (claim == null || !claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce precisa estar dentro de um terreno seu para vende-lo."));
+            return true;
+        }
+
+        int price;
+        try {
+            price = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
+            return true;
+        }
+
+        if (price < 0) {
+            player.sendMessage(cfg.getMsg("erro.numero-positivo", "&cO preco deve ser um numero positivo."));
+            return true;
+        }
+
+        claim.putForSale(price);
+        String itemName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
+        player.sendMessage(cfg.getMsg("venda.colocada-a-venda", "Terreno a venda!")
+            .replace("{claim_name}", claim.getClaimName())
+            .replace("{price}", String.valueOf(price))
+            .replace("{item_name}", itemName));
+        return true;
+    }
+
+    private boolean handleUnsellCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        ClaimManager claimManager = plugin.getClaimManager();
+
+        Claim claim = claimManager.getClaimAt(player.getLocation());
+        if (claim == null || !claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce precisa estar dentro de um terreno seu para gerenciar a venda."));
+            return true;
+        }
+
+        if (!claim.isForSale()) {
+            player.sendMessage(cfg.getMsg("erro.nao-esta-a-venda", "&cEste terreno nao esta a venda."));
+            return true;
+        }
+
+        claim.removeFromSale();
+        player.sendMessage(cfg.getMsg("venda.removida-do-mercado", "Venda cancelada!")
+            .replace("{claim_name}", claim.getClaimName()));
+        return true;
+    }
+
+    private boolean handleBuyCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        ClaimManager claimManager = plugin.getClaimManager();
+
+        if (args.length < 2) {
+            player.sendMessage(cfg.getMsg("ajuda.buy", "&cUse: /claim buy <novo-nome>"));
+            return true;
+        }
+
+        Claim claim = claimManager.getClaimAt(player.getLocation());
+        if (claim == null || !claim.isForSale()) {
+            player.sendMessage(cfg.getMsg("erro.nao-esta-a-venda", "&cEste terreno nao esta a venda."));
+            return true;
+        }
+
+        if (claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("erro.comprar-proprio-terreno", "&cVoce nao pode comprar seu proprio terreno."));
+            return true;
+        }
+
+        int price = claim.getSalePrice();
+        Material itemType = cfg.getItemCompra();
+        ItemStack payment = new ItemStack(itemType, price);
+
+        if (!player.getInventory().contains(itemType, price)) {
+            player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "Itens insuficientes!")
+                .replace("{item_name}", itemType.name().replace("_", " ").toLowerCase())
+                .replace("{cost}", String.valueOf(price)));
+            return true;
+        }
+
+        Player seller = plugin.getServer().getPlayer(claim.getOwnerName());
+        if (seller == null || !seller.isOnline()) {
+            player.sendMessage(cfg.getMsg("erro.vendedor-offline", "&cO dono deste terreno nao esta online."));
+            return true;
+        }
+
+        if (seller.getInventory().firstEmpty() == -1) {
+            player.sendMessage(cfg.getMsg("erro.inventario-vendedor-cheio", "&cO inventario do vendedor esta cheio!"));
+            return true;
+        }
+
+        player.getInventory().removeItem(payment);
+        seller.getInventory().addItem(payment);
+
+        String oldClaimName = claim.getClaimName();
+        String newClaimName = args[1];
+        String itemName = itemType.name().replace("_", " ").toLowerCase();
+
+        claim.setOwner(player.getName());
+        claim.setClaimName(newClaimName);
+        claim.getTrustedPlayers().clear();
+        claim.removeFromSale();
+
+        player.sendMessage(cfg.getMsg("venda.compra-sucesso-comprador", "Compra realizada!")
+            .replace("{claim_name}", newClaimName));
+        
+        seller.sendMessage(cfg.getMsg("venda.compra-sucesso-vendedor", "Terreno vendido!")
+            .replace("{claim_name_antigo}", oldClaimName)
+            .replace("{comprador}", player.getName())
+            .replace("{price}", String.valueOf(price))
+            .replace("{item_name}", itemName));
+
+        System.out.println("[BlockyClaim] O jogador " + player.getName() + " comprou a claim '" + oldClaimName + "' de " + seller.getName() + " por " + price + " " + itemName);
+        return true;
+    }
+
     private boolean handleListCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
@@ -155,6 +298,55 @@ public class CommandManager implements CommandExecutor {
                     .replace("{claim_name}", claim.getClaimName())));
             }
         }
+        return true;
+    }
+
+    private boolean handleOccupyCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        ClaimManager claimManager = plugin.getClaimManager();
+
+        if (args.length < 2) {
+            player.sendMessage(cfg.getMsg("ajuda.occupy", "&cUse: /claim occupy <novo-nome>"));
+            return true;
+        }
+        
+        Claim claim = claimManager.getClaimAt(player.getLocation());
+
+        if (claim == null) {
+            player.sendMessage(cfg.getMsg("abandono.nao-esta-em-claim", "&cVoce precisa estar dentro de um terreno abandonado para ocupa-lo."));
+            return true;
+        }
+
+        if (!claimManager.isAbandoned(claim)) {
+            player.sendMessage(cfg.getMsg("abandono.nao-esta-abandonado", "&cEste terreno nao esta abandonado."));
+            return true;
+        }
+
+        double custoOriginal = claim.getSize() * cfg.getCustoPorBloco();
+        double percentualOcupar = cfg.getPercentualPrecoOcupar() / 100.0;
+        int custoFinal = (int) Math.ceil(custoOriginal * percentualOcupar);
+        Material itemCompra = cfg.getItemCompra();
+
+        if (!player.getInventory().contains(itemCompra, custoFinal)) {
+            player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "&cVoce nao tem {item_name} suficientes! Precisa de {cost}.")
+                .replace("{item_name}", itemCompra.name().replace("_", " ").toLowerCase())
+                .replace("{cost}", String.valueOf(custoFinal)));
+            return true;
+        }
+        
+        player.getInventory().removeItem(new ItemStack(itemCompra, custoFinal));
+
+        String antigoDono = claim.getOwnerName();
+        String novoNome = args[1];
+        claim.setOwner(player.getName());
+        claim.setClaimName(novoNome); // Renomeia a claim ao ocupar
+        claim.getTrustedPlayers().clear();
+        
+        player.sendMessage(cfg.getMsg("abandono.ocupado-sucesso", "&aVoce ocupou o terreno abandonado! O novo nome e '&6{claim_name}&a'.")
+            .replace("{claim_name}", novoNome));
+            
+        System.out.println("[BlockyClaim] O jogador " + player.getName() + " ocupou a claim '" + claim.getClaimName() + "' que pertencia a " + antigoDono);
+        
         return true;
     }
 

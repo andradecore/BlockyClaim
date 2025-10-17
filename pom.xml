@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.blockycraft</groupId>
-    <artifactId>IronClaim</artifactId>
+    <artifactId>BlockyClaim</artifactId>
     <version>2.2</version>
     <packaging>jar</packaging>
 
-    <name>IronClaim</name>
+    <name>BlockyClaim</name>
     <description>Plugin de protecao de terreno com economia baseada em ferro.</description>
 
     <properties>

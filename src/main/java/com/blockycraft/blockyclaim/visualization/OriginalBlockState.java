@@ -1,4 +1,4 @@
-package com.blockycraft.ironclaim.visualization;
+package com.blockycraft.blockyclaim.visualization;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

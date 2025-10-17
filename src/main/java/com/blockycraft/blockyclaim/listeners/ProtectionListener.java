@@ -1,8 +1,8 @@
-package com.blockycraft.ironclaim.listeners;
+package com.blockycraft.blockyclaim.listeners;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.config.ConfigManager;
-import com.blockycraft.ironclaim.data.Claim;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.data.Claim;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -11,9 +11,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 
 public class ProtectionListener extends BlockListener {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
 
-    public ProtectionListener(IronClaim plugin) {
+    public ProtectionListener(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 

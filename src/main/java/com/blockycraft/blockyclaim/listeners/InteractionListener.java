@@ -1,8 +1,8 @@
-package com.blockycraft.ironclaim.listeners;
+package com.blockycraft.blockyclaim.listeners;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.config.ConfigManager;
-import com.blockycraft.ironclaim.data.Claim;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.data.Claim;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -12,9 +12,9 @@ import org.bukkit.event.player.PlayerListener;
 
 public class InteractionListener extends PlayerListener {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
 
-    public InteractionListener(IronClaim plugin) {
+    public InteractionListener(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 

@@ -1,6 +1,6 @@
-package com.blockycraft.ironclaim.listeners;
+package com.blockycraft.blockyclaim.listeners;
 
-import com.blockycraft.ironclaim.IronClaim;
+import com.blockycraft.blockyclaim.BlockyClaim;
 import org.bukkit.Location;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
@@ -9,9 +9,9 @@ import org.bukkit.event.entity.EntityListener;
 
 public class ExplosionListener extends EntityListener {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
 
-    public ExplosionListener(IronClaim plugin) {
+    public ExplosionListener(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 

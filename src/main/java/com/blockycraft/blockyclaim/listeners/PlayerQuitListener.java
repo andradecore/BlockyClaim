@@ -1,15 +1,15 @@
-package com.blockycraft.ironclaim.listeners;
+package com.blockycraft.blockyclaim.listeners;
 
-import com.blockycraft.ironclaim.IronClaim;
+import com.blockycraft.blockyclaim.BlockyClaim;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerQuitListener extends PlayerListener {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
 
-    public PlayerQuitListener(IronClaim plugin) {
+    public PlayerQuitListener(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 

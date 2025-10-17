@@ -1,7 +1,7 @@
-package com.blockycraft.ironclaim.visualization;
+package com.blockycraft.blockyclaim.visualization;
 
-import com.blockycraft.ironclaim.IronClaim;
-import com.blockycraft.ironclaim.data.Claim;
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyclaim.data.Claim;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,11 +17,11 @@ import java.util.Set;
 
 public class VisualizationManager {
 
-    private final IronClaim plugin;
+    private final BlockyClaim plugin;
     private final Map<String, Set<OriginalBlockState>> activeVisualizations = new HashMap<>();
     private final Map<String, String> currentlyVisualizing = new HashMap<>();
 
-    public VisualizationManager(IronClaim plugin) {
+    public VisualizationManager(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 
