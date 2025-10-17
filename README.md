@@ -65,3 +65,8 @@ Listeners interceptam eventos de construção, destruição, explosão (incluind
 - `/untrust <jogador>`
   Remove a permissão concedida, impedindo o jogador de construir ou modificar blocos dentro dos seus claims.
 
+## Reporting bugs or requesting features
+Report bugs in [issues](https://github.com/andradecore/BlockyClaim/issues).
+
+## Contact:
+- Discord: https://discord.gg/tthPMHrP
