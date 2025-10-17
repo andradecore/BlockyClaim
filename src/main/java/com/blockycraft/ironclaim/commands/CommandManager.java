@@ -6,6 +6,7 @@ import com.blockycraft.ironclaim.data.Claim;
 import com.blockycraft.ironclaim.listeners.ClaimToolListener;
 import com.blockycraft.ironclaim.managers.ClaimManager;
 import com.blockycraft.ironclaim.managers.PlayerDataManager;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -47,8 +48,14 @@ public class CommandManager implements CommandExecutor {
     private boolean handleClaimCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         if (args.length == 0) {
-            player.sendMessage(cfg.getMsg("ajuda.linha1", "&6--- Ajuda IronClaim ---"));
-            // Adicione mais linhas de ajuda se quiser
+            // CORREÇÃO: Lê todas as linhas de ajuda do config e as envia.
+            // Usamos ChatColor diretamente aqui para não adicionar o prefixo do plugin a cada linha.
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda IronClaim ---").replace(cfg.getMsg("prefixo", ""), "")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- Mostra seus blocos.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- Compra blocos.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- Confirma um terreno.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- Da permissao a um amigo.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- Remove a permissao.")));
             return true;
         }
 

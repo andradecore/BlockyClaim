@@ -1,16 +1,33 @@
 name: IronClaim
 main: com.blockycraft.ironclaim.IronClaim
-version: 2.0
-author: Bernardo Zukerman
+version: 2.1
+author: SeuNomeAqui
 description: Plugin de protecao de terreno com economia baseada em ferro.
+
+permissions:
+  ironclaim.*:
+    description: Da acesso a todos os comandos do IronClaim.
+    default: op
+  ironclaim.claim:
+    description: Permite o uso do comando /claim e seus subcomandos.
+    default: true
+  ironclaim.trust:
+    description: Permite o uso do comando /trust.
+    default: true
+  ironclaim.untrust:
+    description: Permite o uso do comando /untrust.
+    default: true
 
 commands:
   claim:
     description: Compra e gerencia blocos de protecao.
     usage: /claim <comprar|saldo|confirm>
+    permission: ironclaim.claim # <-- LINHA ADICIONADA
   trust:
     description: Concede permissao a um jogador em seu terreno.
     usage: /trust <jogador>
+    permission: ironclaim.trust # <-- LINHA ADICIONADA
   untrust:
     description: Remove a permissao de um jogador em seu terreno.
     usage: /untrust <jogador>
+    permission: ironclaim.untrust # <-- LINHA ADICIONADA
