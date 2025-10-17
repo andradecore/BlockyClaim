@@ -14,6 +14,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import java.util.List;
 import java.util.Map;
 
 public class CommandManager implements CommandExecutor {
@@ -48,12 +49,13 @@ public class CommandManager implements CommandExecutor {
     private boolean handleClaimCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         if (args.length == 0) {
-            // CORREÇÃO: Lê todas as linhas de ajuda do config e as envia.
-            // Usamos ChatColor diretamente aqui para não adicionar o prefixo do plugin a cada linha.
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda IronClaim ---").replace(cfg.getMsg("prefixo", ""), "")));
+            // Remove o prefixo do plugin para formatar a ajuda
+            String prefix = cfg.getMsg("prefixo", "");
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda IronClaim ---").replace(prefix, "")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- Mostra seus blocos.")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- Compra blocos.")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- Confirma um terreno.")));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- Lista suas claims ou de outro jogador.")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- Da permissao a um amigo.")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- Remove a permissao.")));
             return true;
@@ -109,7 +111,50 @@ public class CommandManager implements CommandExecutor {
             return handleConfirmCommand(player, args);
         }
         
+        if (subCommand.equals("list")) {
+            return handleListCommand(player, args);
+        }
+        
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
+        return true;
+    }
+    
+    private boolean handleListCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        ClaimManager claimManager = plugin.getClaimManager();
+        String targetName;
+        boolean isSelf = true;
+
+        if (args.length > 1) {
+            targetName = args[1];
+            isSelf = false;
+        } else {
+            targetName = player.getName();
+        }
+
+        List<Claim> claims = claimManager.getClaimsByOwner(targetName);
+
+        if (claims.isEmpty()) {
+            if (isSelf) {
+                player.sendMessage(cfg.getMsg("list.no-claims-self", "&cVoce nao possui nenhuma claim."));
+            } else {
+                player.sendMessage(cfg.getMsg("list.no-claims-other", "&c{player} &cnao possui nenhuma claim.")
+                    .replace("{player}", targetName));
+            }
+        } else {
+            String prefix = cfg.getMsg("prefixo", "");
+            if (isSelf) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.header-self", "&e--- Suas Claims ---").replace(prefix, "")));
+            } else {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.header-other", "&e--- Claims de {player} ---").replace(prefix, "")
+                    .replace("{player}", targetName)));
+            }
+            
+            for (Claim claim : claims) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.format", "&7- &f{claim_name}").replace(prefix, "")
+                    .replace("{claim_name}", claim.getClaimName())));
+            }
+        }
         return true;
     }
 

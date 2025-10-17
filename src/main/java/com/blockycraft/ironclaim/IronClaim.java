@@ -41,12 +41,13 @@ public class IronClaim extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
         
         pm.registerEvent(Type.PLAYER_JOIN, new PlayerJoinListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this); // <-- LINHA ADICIONADA
+        pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_INTERACT, new ClaimToolListener(this), Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_BREAK, new ProtectionListener(this), Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_PLACE, new ProtectionListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_INTERACT, new InteractionListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this); // <-- Proteção contra Creeper
 
         System.out.println("[IronClaim] Listeners de eventos registrados.");
     }
@@ -72,6 +73,7 @@ public class IronClaim extends JavaPlugin {
         System.out.println("[IronClaim] Plugin desativado.");
     }
 
+    // Getters para todos os managers
     public ConfigManager getConfigManager() { return configManager; }
     public ClaimManager getClaimManager() { return claimManager; }
     public PlayerDataManager getPlayerDataManager() { return playerDataManager; }

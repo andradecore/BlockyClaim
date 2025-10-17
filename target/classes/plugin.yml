@@ -1,7 +1,7 @@
 name: IronClaim
 main: com.blockycraft.ironclaim.IronClaim
-version: 2.1
-author: SeuNomeAqui
+version: 2.2
+author: Bernardo Zukerman
 description: Plugin de protecao de terreno com economia baseada em ferro.
 
 permissions:
