@@ -23,7 +23,7 @@ public class InteractionListener extends PlayerListener {
         Player player = event.getPlayer();
         Action action = event.getAction();
         
-        // Ignora cliques no ar
+        // Ignora cliques no ar, pois não envolvem blocos
         if (action == Action.LEFT_CLICK_AIR || action == Action.RIGHT_CLICK_AIR) {
             return;
         }
@@ -36,7 +36,7 @@ public class InteractionListener extends PlayerListener {
             return;
         }
 
-        // Se o jogador não tem permissão na claim...
+        // Se o jogador não tem permissão na claim, aplicamos as regras de proteção.
         if (!claim.hasPermission(player.getName())) {
             ConfigManager cfg = plugin.getConfigManager();
             Material type = clickedBlock.getType();
@@ -49,7 +49,7 @@ public class InteractionListener extends PlayerListener {
                     return;
                 }
 
-                // Lista de blocos interativos protegidos
+                // Lista de blocos interativos protegidos contra clique direito
                 boolean isProtectedInteractable = type == Material.CHEST || type == Material.FURNACE || type == Material.BURNING_FURNACE ||
                                                   type == Material.WOODEN_DOOR || type == Material.IRON_DOOR_BLOCK || type == Material.LEVER ||
                                                   type == Material.STONE_BUTTON || type == Material.DISPENSER || type == Material.JUKEBOX;
@@ -61,16 +61,24 @@ public class InteractionListener extends PlayerListener {
                 }
             }
             
-            // --- NOVA LÓGICA PARA CLIQUE ESQUERDO (QUEBRAR BLOCOS FRÁGEIS) ---
-            if (action == Action.LEFT_CLICK_BLOCK) {
+            // --- LÓGICA ATUALIZADA PARA CLIQUE ESQUERDO ---
+            else if (action == Action.LEFT_CLICK_BLOCK) {
                 // Lista de blocos frágeis que podem ser quebrados com a mão
                 boolean isFragile = type == Material.GRASS || type == Material.LONG_GRASS || type == Material.RED_ROSE || 
                                     type == Material.YELLOW_FLOWER || type == Material.SAPLING || type == Material.SNOW;
+                
+                // CORREÇÃO: Lista de blocos que podem ser ATIVADOS com clique esquerdo
+                boolean isLeftClickInteractable = type == Material.WOODEN_DOOR || type == Material.LEVER || type == Material.STONE_BUTTON;
 
                 if (isFragile) {
                     event.setCancelled(true);
                     // Usamos a mesma mensagem de "quebrar blocos" para consistência
                     player.sendMessage(cfg.getMsg("sem-permissao-quebrar", "&cVoce nao pode quebrar blocos no terreno de &6{owner}&c.")
+                        .replace("{owner}", claim.getOwnerName()));
+                } else if (isLeftClickInteractable) {
+                    event.setCancelled(true);
+                    // Usamos a mensagem de "interagir" para consistência
+                    player.sendMessage(cfg.getMsg("sem-permissao-interagir", "&cVoce nao pode interagir com blocos no terreno de &6{owner}&c.")
                         .replace("{owner}", claim.getOwnerName()));
                 }
             }

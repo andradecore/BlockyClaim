@@ -83,16 +83,21 @@ public class ConfigManager {
     public int getTamanhoMinimoClaim() { return getInt("regras.tamanho-minimo-claim", 100); }
     public int getMaxClaimsPorJogador() { return getInt("regras.max-claims-por-jogador", 5); }
     
-    // --- MÉTODOS NOVOS ---
-    public int getDiasParaAbandono() { return getInt("regras.dias-para-abandono", 30); }
+    // ATUALIZADO: Renomeado de 'getDiasParaAbandono' para 'getHorasParaAbandono'
+    public int getHorasParaAbandono() { return getInt("regras.horas-para-abandono", 24); }
+    
     public int getPercentualPrecoOcupar() { return getInt("economia.percentual-preco-ocupar", 30); }
-    // --- FIM DOS MÉTODOS NOVOS ---
 
     public boolean isAvisoFronteiraAtivado() { return getBoolean("funcionalidades.avisar-ao-entrar-na-claim", true); }
 
     public String getMsg(String path, String defaultValue) {
-        String prefix = getString("mensagens.prefixo", "&6[BlockyClaim] &r");
+        String prefix = getString("mensagens.prefixo", "");
         String message = getString("mensagens." + path, defaultValue);
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
+    }
+    
+    public String getRawMsg(String path, String defaultValue) {
+        String message = getString("mensagens." + path, defaultValue);
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

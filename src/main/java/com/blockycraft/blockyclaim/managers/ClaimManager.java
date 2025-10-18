@@ -27,9 +27,10 @@ public class ClaimManager {
         this.claimProps = new Properties();
     }
 
+    // ATUALIZADO: Lógica de cálculo alterada para horas
     public boolean isAbandoned(Claim claim) {
-        int diasParaAbandono = plugin.getConfigManager().getDiasParaAbandono();
-        if (diasParaAbandono <= 0) {
+        int horasParaAbandono = plugin.getConfigManager().getHorasParaAbandono();
+        if (horasParaAbandono <= 0) {
             return false;
         }
         long ultimoLogin = plugin.getPlayerDataManager().getLastLogin(claim.getOwnerName());
@@ -37,8 +38,8 @@ public class ClaimManager {
             return false;
         }
         long tempoInativoMillis = System.currentTimeMillis() - ultimoLogin;
-        long diasInativo = TimeUnit.MILLISECONDS.toDays(tempoInativoMillis);
-        return diasInativo >= diasParaAbandono;
+        long horasInativo = TimeUnit.MILLISECONDS.toHours(tempoInativoMillis);
+        return horasInativo >= horasParaAbandono;
     }
 
     public Claim getClaimAt(Location location) {
