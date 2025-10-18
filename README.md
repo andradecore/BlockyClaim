@@ -14,43 +14,48 @@ BlockyClaim é um plugin de proteção de terras para o servidor BlockyCRAFT. Pe
 - Permite conceder e remover direitos de construção para outros jogadores.
 - Armazena saldo de claims e logins em arquivos próprios no servidor.
 
+## Integração com BlockyFactions
+Quando o plugin `BlockyFactions` está ativo no servidor, uma nova mecânica é habilitada:
+- **Trust Automático**: Jogadores que fazem parte da mesma facção recebem permissão de construção e interação nos terrenos uns dos outros automaticamente. Isso elimina a necessidade de usar o comando `/trust` para cada membro da sua facção.
+- **Proteção de `/untrust`**: Não é possível usar o comando `/untrust` em um jogador que seja membro da sua própria facção. A permissão é gerenciada centralmente pela facção.
+
 ## Eventos Protegidos
 Listeners interceptam eventos de construção, destruição, explosão (incluindo Creepers) e movimentação, barrando ações de terceiros em claims protegidos.
 
 ## Tutorial de Comandos
 
 ### Claim
-- `/claim comprar`
-  Compra o bloco de proteção onde você está, consumindo ferro do seu saldo.
+- `/claim comprar <qtde>`
+  Compra a quantidade especificada de blocos de proteção, consumindo ferro do seu inventário.
 
 - `/claim saldo`
   Mostra quantos blocos de proteção você possui disponíveis.
 
-- `/claim lista`
-  Lista todas as áreas protegidas (claims) registradas para o seu jogador.
+- `/claim list [jogador]`
+  Lista todas as áreas protegidas (claims) registradas para o seu jogador ou para outro.
 
-- `/claim vender`
-  Coloca uma de suas áreas de proteção à venda.
+- `/claim sell <preço>`
+  Coloca a área de proteção onde você está à venda pelo preço definido.
 
-- `/claim comprar <jogador>`
-  Permite comprar uma área de proteção à venda de outro jogador.
+- `/claim buy <novo-nome>`
+  Permite comprar uma área de proteção que está à venda, definindo um novo nome para ela.
 
-- `/claim confirmar`
-  Confirma uma ação de compra ou venda pendente.
+- `/claim unsell`
+  Retira do mercado um terreno seu que estava à venda.
 
-- `/claim ocupar`
-  Permite ocupar uma área que está abandonada (sem dono ativo).
+- `/claim confirm <nome>`
+  Confirma a criação de um terreno após selecionar os dois cantos.
 
-- `/claim`
-  Exibe informações e instruções gerais de uso.
+- `/claim occupy <novo-nome>`
+  Permite ocupar uma área que está abandonada (sem dono ativo) por um custo reduzido.
 
 ### Trust
 - `/trust <jogador>`
-  Concede permissão para que outro jogador possa construir ou editar dentro das suas áreas protegidas.
+  Concede permissão para que outro jogador (que não é da sua facção) possa construir ou editar dentro das suas áreas protegidas.
 
 ### Untrust
 - `/untrust <jogador>`
-  Remove a permissão concedida, impedindo o jogador de construir ou modificar blocos dentro dos seus claims.
+  Remove a permissão concedida a outro jogador (que não é da sua facção).
 
 ## Reportar bugs ou requisitar features
 Reporte bugs em [issues](https://github.com/andradecore/BlockyClaim/issues).
