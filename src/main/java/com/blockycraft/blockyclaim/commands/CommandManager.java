@@ -6,7 +6,7 @@ import com.blockycraft.blockyclaim.data.Claim;
 import com.blockycraft.blockyclaim.listeners.ClaimToolListener;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
-import com.blockycraft.blockyfactions.api.BlockyFactionsAPI; // <-- NOVO IMPORT DA API
+import com.blockycraft.blockyfactions.api.BlockyFactionsAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -21,45 +21,12 @@ import java.util.Map;
 public class CommandManager implements CommandExecutor {
 
     private final BlockyClaim plugin;
+    private static final int TOTAL_HELP_PAGES = 2; // Define o número total de páginas
 
     public CommandManager(BlockyClaim plugin) {
         this.plugin = plugin;
     }
 
-    // ... (onCommand e todos os outros handle...Command continuam iguais) ...
-
-    // --- MÉTODO handleUntrustCommand ATUALIZADO ---
-    private boolean handleUntrustCommand(Player player, String[] args) {
-        ConfigManager cfg = plugin.getConfigManager();
-        if (args.length < 1) {
-            player.sendMessage(cfg.getMsg("ajuda.untrust", "§cUse: /untrust <jogador>"));
-            return true;
-        }
-        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
-        if (claim == null) {
-            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "§cVoce precisa estar dentro de um terreno seu para usar este comando."));
-            return true;
-        }
-        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(cfg.getMsg("nao-e-dono", "§cVoce nao e o dono deste terreno."));
-            return true;
-        }
-        
-        String targetName = args[0];
-
-        // NOVO: Verifica se o alvo é da mesma facção
-        if (BlockyClaim.getInstance().isFactionsHookEnabled() && BlockyFactionsAPI.arePlayersInSameFaction(player.getName(), targetName)) {
-            player.sendMessage(cfg.getMsg("erro.nao-pode-untrust-faccao", "§cVoce nao pode remover a permissao de um membro da sua faccao."));
-            return true;
-        }
-
-        claim.untrustPlayer(targetName);
-        player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.")
-            .replace("{target}", targetName));
-        return true;
-    }
-    
-    // Cole aqui o resto dos seus métodos handle... que já existem no seu CommandManager.java
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -80,22 +47,60 @@ public class CommandManager implements CommandExecutor {
 
         return false;
     }
+    
+    // Método auxiliar para checar se uma string é um número inteiro
+    private boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void displayHelpPage(Player player, int page) {
+        ConfigManager cfg = plugin.getConfigManager();
+        String prefix = cfg.getMsg("prefixo", "");
+
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---").replace(prefix, "")));
+
+        switch (page) {
+            case 1:
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- ...")));
+                break;
+            case 2:
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell <preco> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.buy", "&b/claim buy <novo-nome> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.occupy", "&b/claim occupy <novo-nome> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- ...")));
+                break;
+            default:
+                player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
+                return;
+        }
+
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.footer", "&7--- Pagina {current}/{total} ---")
+            .replace(prefix, "")
+            .replace("{current}", String.valueOf(page))
+            .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))));
+    }
 
     private boolean handleClaimCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
+
         if (args.length == 0) {
-            String prefix = cfg.getMsg("prefixo", "");
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---").replace(prefix, "")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm <nome> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.occupy", "&b/claim occupy <novo-nome> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell <preco> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.buy", "&b/claim buy <novo-nome> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- ...")));
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- ...")));
+            displayHelpPage(player, 1);
+            return true;
+        }
+
+        if (isInteger(args[0])) {
+            int page = Integer.parseInt(args[0]);
+            displayHelpPage(player, page);
             return true;
         }
 
@@ -177,8 +182,36 @@ public class CommandManager implements CommandExecutor {
             .replace("{target}", targetName));
         return true;
     }
+
+    private boolean handleUntrustCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (args.length < 1) {
+            player.sendMessage(cfg.getMsg("ajuda.untrust", "§cUse: /untrust <jogador>"));
+            return true;
+        }
+        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
+        if (claim == null) {
+            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "§cVoce precisa estar dentro de um terreno seu para usar este comando."));
+            return true;
+        }
+        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("nao-e-dono", "§cVoce nao e o dono deste terreno."));
+            return true;
+        }
+        
+        String targetName = args[0];
+
+        if (BlockyClaim.getInstance().isFactionsHookEnabled() && BlockyFactionsAPI.arePlayersInSameFaction(player.getName(), targetName)) {
+            player.sendMessage(cfg.getMsg("erro.nao-pode-untrust-faccao", "§cVoce nao pode remover a permissao de um membro da sua faccao."));
+            return true;
+        }
+
+        claim.untrustPlayer(targetName);
+        player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.")
+            .replace("{target}", targetName));
+        return true;
+    }
     
-    // Demais métodos (handleSellCommand, handleBuyCommand, etc.)
     private boolean handleSellCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
