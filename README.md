@@ -1,11 +1,5 @@
 # BlockyClaim
-BlockyClaim é um plugin de proteção de terras para servidores Minecraft baseados no BlockyCRAFT. Permite que jogadores reivindiquem áreas do mundo, protegendo construções contra outros jogadores. O sistema utiliza ferro como moeda para aquisição e manutenção dos claims.
-
-## Instalação
-1. Faça o download ou clone este repositório.
-2. Compile o projeto utilizando Maven.
-3. Mova o arquivo `.jar` gerado para a pasta `plugins` do seu servidor Bukkit/Spigot.
-4. Reinicie o servidor.
+BlockyClaim é um plugin de proteção de terras para o servidor BlockyCRAFT. Permite que jogadores reivindiquem áreas do mundo, protegendo construções contra outros jogadores. O sistema utiliza ferro como moeda para aquisição e manutenção dos claims.
 
 ## Permissões
 - `blockyclaim.*` — Todas as permissões do plugin.
@@ -21,13 +15,7 @@ BlockyClaim é um plugin de proteção de terras para servidores Minecraft basea
 - Armazena saldo de claims e logins em arquivos próprios no servidor.
 
 ## Eventos Protegidos
-
 Listeners interceptam eventos de construção, destruição, explosão (incluindo Creepers) e movimentação, barrando ações de terceiros em claims protegidos.
-
-## Observações
-
-- Recomenda-se consultar o `plugin.yml` para adaptações.
-- Em desenvolvimento; sujeito a alterações.
 
 ## Tutorial de Comandos
 
