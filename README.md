@@ -15,7 +15,7 @@ BlockyClaim é um plugin de proteção de terras para o servidor BlockyCRAFT. Pe
 - Armazena saldo de claims e logins em arquivos próprios no servidor.
 
 ## Integração com BlockyFactions
-Quando o plugin `BlockyFactions` está ativo no servidor, uma nova mecânica é habilitada:
+Quando o plugin [BlockyFactions](https://github.com/andradecore/BlockyFactions) está ativo no servidor, uma nova mecânica é habilitada:
 - **Trust Automático**: Jogadores que fazem parte da mesma facção recebem permissão de construção e interação nos terrenos uns dos outros automaticamente. Isso elimina a necessidade de usar o comando `/trust` para cada membro da sua facção.
 - **Proteção de `/untrust`**: Não é possível usar o comando `/untrust` em um jogador que seja membro da sua própria facção. A permissão é gerenciada centralmente pela facção.
 
