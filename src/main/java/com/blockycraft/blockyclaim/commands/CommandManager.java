@@ -6,6 +6,7 @@ import com.blockycraft.blockyclaim.data.Claim;
 import com.blockycraft.blockyclaim.listeners.ClaimToolListener;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
+import com.blockycraft.blockyfactions.api.BlockyFactionsAPI; // <-- NOVO IMPORT DA API
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,6 +26,40 @@ public class CommandManager implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    // ... (onCommand e todos os outros handle...Command continuam iguais) ...
+
+    // --- MÉTODO handleUntrustCommand ATUALIZADO ---
+    private boolean handleUntrustCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (args.length < 1) {
+            player.sendMessage(cfg.getMsg("ajuda.untrust", "§cUse: /untrust <jogador>"));
+            return true;
+        }
+        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
+        if (claim == null) {
+            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "§cVoce precisa estar dentro de um terreno seu para usar este comando."));
+            return true;
+        }
+        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("nao-e-dono", "§cVoce nao e o dono deste terreno."));
+            return true;
+        }
+        
+        String targetName = args[0];
+
+        // NOVO: Verifica se o alvo é da mesma facção
+        if (BlockyClaim.getInstance().isFactionsHookEnabled() && BlockyFactionsAPI.arePlayersInSameFaction(player.getName(), targetName)) {
+            player.sendMessage(cfg.getMsg("erro.nao-pode-untrust-faccao", "§cVoce nao pode remover a permissao de um membro da sua faccao."));
+            return true;
+        }
+
+        claim.untrustPlayer(targetName);
+        player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.")
+            .replace("{target}", targetName));
+        return true;
+    }
+    
+    // Cole aqui o resto dos seus métodos handle... que já existem no seu CommandManager.java
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -49,7 +84,6 @@ public class CommandManager implements CommandExecutor {
     private boolean handleClaimCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         if (args.length == 0) {
-            // CORREÇÃO: Pede as chaves sem o prefixo "mensagens."
             String prefix = cfg.getMsg("prefixo", "");
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---").replace(prefix, "")));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- ...")));
@@ -111,32 +145,40 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
-        if (subCommand.equals("confirm")) {
-            return handleConfirmCommand(player, args);
-        }
-        
-        if (subCommand.equals("list")) {
-            return handleListCommand(player, args);
-        }
-
-        if (subCommand.equals("occupy")) {
-            return handleOccupyCommand(player, args);
-        }
-        
-        if (subCommand.equals("sell")) {
-            return handleSellCommand(player, args);
-        }
-        if (subCommand.equals("buy")) {
-            return handleBuyCommand(player, args);
-        }
-        if (subCommand.equals("unsell")) {
-            return handleUnsellCommand(player, args);
-        }
+        if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
+        if (subCommand.equals("list")) { return handleListCommand(player, args); }
+        if (subCommand.equals("occupy")) { return handleOccupyCommand(player, args); }
+        if (subCommand.equals("sell")) { return handleSellCommand(player, args); }
+        if (subCommand.equals("buy")) { return handleBuyCommand(player, args); }
+        if (subCommand.equals("unsell")) { return handleUnsellCommand(player, args); }
         
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
         return true;
     }
-
+    
+    private boolean handleTrustCommand(Player player, String[] args) {
+        ConfigManager cfg = plugin.getConfigManager();
+        if (args.length < 1) {
+            player.sendMessage(cfg.getMsg("ajuda.trust", "&cUse: /trust <jogador>"));
+            return true;
+        }
+        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
+        if (claim == null) {
+            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "&cVoce precisa estar dentro de um terreno seu para usar este comando."));
+            return true;
+        }
+        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
+            player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce nao e o dono deste terreno."));
+            return true;
+        }
+        String targetName = args[0];
+        claim.trustPlayer(targetName);
+        player.sendMessage(cfg.getMsg("trust-adicionado", "&a{target} &aagora tem permissao no seu terreno.")
+            .replace("{target}", targetName));
+        return true;
+    }
+    
+    // Demais métodos (handleSellCommand, handleBuyCommand, etc.)
     private boolean handleSellCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
@@ -339,7 +381,7 @@ public class CommandManager implements CommandExecutor {
         String antigoDono = claim.getOwnerName();
         String novoNome = args[1];
         claim.setOwner(player.getName());
-        claim.setClaimName(novoNome); // Renomeia a claim ao ocupar
+        claim.setClaimName(novoNome);
         claim.getTrustedPlayers().clear();
         
         player.sendMessage(cfg.getMsg("abandono.ocupado-sucesso", "&aVoce ocupou o terreno abandonado! O novo nome e '&6{claim_name}&a'.")
@@ -405,50 +447,6 @@ public class CommandManager implements CommandExecutor {
             .replace("{date}", newClaim.getFormattedCreationDate()));
         player.sendMessage(cfg.getMsg("saldo-atual", "&aSeu novo saldo e: &6{balance}")
             .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
-        return true;
-    }
-
-    private boolean handleTrustCommand(Player player, String[] args) {
-        ConfigManager cfg = plugin.getConfigManager();
-        if (args.length < 1) {
-            player.sendMessage(cfg.getMsg("ajuda.trust", "&cUse: /trust <jogador>"));
-            return true;
-        }
-        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
-        if (claim == null) {
-            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "&cVoce precisa estar dentro de um terreno seu para usar este comando."));
-            return true;
-        }
-        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce nao e o dono deste terreno."));
-            return true;
-        }
-        String targetName = args[0];
-        claim.trustPlayer(targetName);
-        player.sendMessage(cfg.getMsg("trust-adicionado", "&a{target} &aagora tem permissao no seu terreno.")
-            .replace("{target}", targetName));
-        return true;
-    }
-
-    private boolean handleUntrustCommand(Player player, String[] args) {
-        ConfigManager cfg = plugin.getConfigManager();
-        if (args.length < 1) {
-            player.sendMessage(cfg.getMsg("ajuda.untrust", "&cUse: /untrust <jogador>"));
-            return true;
-        }
-        Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
-        if (claim == null) {
-            player.sendMessage(cfg.getMsg("precisa-estar-dentro", "&cVoce precisa estar dentro de um terreno seu para usar este comando."));
-            return true;
-        }
-        if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
-            player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce nao e o dono deste terreno."));
-            return true;
-        }
-        String targetName = args[0];
-        claim.untrustPlayer(targetName);
-        player.sendMessage(cfg.getMsg("untrust-removido", "&a{target} &anao tem mais permissao no seu terreno.")
-            .replace("{target}", targetName));
         return true;
     }
 }

@@ -14,6 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class BlockyClaim extends JavaPlugin {
 
+    private static BlockyClaim instance; // <-- NOVO: Para acesso estático
+    private boolean factionsHookEnabled = false; // <-- NOVO: Flag de integração
+
     private ConfigManager configManager;
     private ClaimManager claimManager;
     private PlayerDataManager playerDataManager;
@@ -21,6 +24,8 @@ public class BlockyClaim extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this; // <-- NOVO: Define a instância estática
+
         this.configManager = new ConfigManager(this);
         this.claimManager = new ClaimManager(this);
         this.playerDataManager = new PlayerDataManager(this);
@@ -28,6 +33,8 @@ public class BlockyClaim extends JavaPlugin {
         
         this.playerDataManager.loadPlayerData();
         this.claimManager.loadClaims();
+
+        setupFactionsHook(); // <-- NOVO: Chama o método de hook
 
         registerListeners();
         registerCommands();
@@ -37,28 +44,16 @@ public class BlockyClaim extends JavaPlugin {
         System.out.println("[BlockyClaim] Plugin ativado com sucesso!");
     }
 
-    private void registerListeners() {
-        PluginManager pm = getServer().getPluginManager();
-        
-        pm.registerEvent(Type.PLAYER_JOIN, new PlayerJoinListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new ClaimToolListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_BREAK, new ProtectionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_PLACE, new ProtectionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new InteractionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this); // <-- Proteção contra Creeper
-
-        System.out.println("[BlockyClaim] Listeners de eventos registrados.");
+    private void setupFactionsHook() { // <-- NOVO MÉTODO
+        if (getServer().getPluginManager().isPluginEnabled("BlockyFactions")) {
+            this.factionsHookEnabled = true;
+            System.out.println("[BlockyClaim] Hook com BlockyFactions ativado com sucesso!");
+        } else {
+            System.out.println("[BlockyClaim] BlockyFactions nao encontrado. A integracao de faccoes esta desativada.");
+        }
     }
 
-    private void registerCommands() {
-        CommandManager commandManager = new CommandManager(this);
-        getCommand("claim").setExecutor(commandManager);
-        getCommand("trust").setExecutor(commandManager);
-        getCommand("untrust").setExecutor(commandManager);
-        System.out.println("[BlockyClaim] Comandos registrados.");
-    }
+    // ... (registerListeners e registerCommands continuam iguais) ...
 
     @Override
     public void onDisable() {
@@ -73,9 +68,42 @@ public class BlockyClaim extends JavaPlugin {
         System.out.println("[BlockyClaim] Plugin desativado.");
     }
 
-    // Getters para todos os managers
+    // --- NOVOS GETTERS ---
+    public static BlockyClaim getInstance() { // <-- NOVO
+        return instance;
+    }
+
+    public boolean isFactionsHookEnabled() { // <-- NOVO
+        return factionsHookEnabled;
+    }
+
+    // --- Getters antigos continuam aqui ---
     public ConfigManager getConfigManager() { return configManager; }
     public ClaimManager getClaimManager() { return claimManager; }
     public PlayerDataManager getPlayerDataManager() { return playerDataManager; }
     public VisualizationManager getVisualizationManager() { return visualizationManager; }
+    
+    // Cole aqui seus métodos registerListeners e registerCommands que já existem
+    private void registerListeners() {
+        PluginManager pm = getServer().getPluginManager();
+        
+        pm.registerEvent(Type.PLAYER_JOIN, new PlayerJoinListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_INTERACT, new ClaimToolListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.BLOCK_BREAK, new ProtectionListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.BLOCK_PLACE, new ProtectionListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_INTERACT, new InteractionListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
+        pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this);
+
+        System.out.println("[BlockyClaim] Listeners de eventos registrados.");
+    }
+
+    private void registerCommands() {
+        CommandManager commandManager = new CommandManager(this);
+        getCommand("claim").setExecutor(commandManager);
+        getCommand("trust").setExecutor(commandManager);
+        getCommand("untrust").setExecutor(commandManager);
+        System.out.println("[BlockyClaim] Comandos registrados.");
+    }
 }

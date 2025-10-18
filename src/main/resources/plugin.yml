@@ -3,6 +3,7 @@ main: com.blockycraft.blockyclaim.BlockyClaim
 version: 2.2
 author: Bernardo Zukerman
 description: Plugin de protecao de terreno com economia baseada em ferro.
+softdepend: [BlockyFactions]
 
 permissions:
   blockyclaim.*:

@@ -26,6 +26,14 @@
             <scope>system</scope>
             <systemPath>${minecraft.server.path}/server.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>com.blockycraft</groupId>
+            <artifactId>blockyfactions</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${minecraft.server.path}/plugins/BlockyFactions.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
