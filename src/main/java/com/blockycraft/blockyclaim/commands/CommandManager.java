@@ -73,7 +73,7 @@ public class CommandManager implements CommandExecutor {
                 break;
             case 2:
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell <preco> &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.buy", "&b/claim buy <novo-nome> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.adquirir", "&b/claim adquirir <novo-nome> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.occupy", "&b/claim occupy <novo-nome> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- ...")));
@@ -119,20 +119,20 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <quantidade>"));
                 return true;
             }
-            int amountToBuy;
-            try { amountToBuy = Integer.parseInt(args[1]); } 
+            int amountToAdquirir;
+            try { amountToAdquirir = Integer.parseInt(args[1]); } 
             catch (NumberFormatException e) {
                 player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
                 return true;
             }
-            if (amountToBuy <= 0) {
+            if (amountToAdquirir <= 0) {
                 player.sendMessage(cfg.getMsg("erro.numero-positivo", "&cA quantidade deve ser maior que zero."));
                 return true;
             }
 
             Material itemCompra = cfg.getItemCompra();
             int custoPorBloco = cfg.getCustoPorBloco();
-            int cost = amountToBuy * custoPorBloco;
+            int cost = amountToAdquirir * custoPorBloco;
 
             if (!player.getInventory().contains(itemCompra, cost)) {
                 player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "&cVoce nao tem {item_name} suficientes! Precisa de {cost}.")
@@ -141,10 +141,10 @@ public class CommandManager implements CommandExecutor {
                 return true;
             }
             player.getInventory().removeItem(new ItemStack(itemCompra, cost));
-            playerDataManager.addClaimBlocks(player.getName(), amountToBuy);
+            playerDataManager.addClaimBlocks(player.getName(), amountToAdquirir);
             
             player.sendMessage(cfg.getMsg("blocos-comprados", "&aVoce comprou &6{amount} &ablocos de protecao!")
-                .replace("{amount}", String.valueOf(amountToBuy)));
+                .replace("{amount}", String.valueOf(amountToAdquirir)));
             player.sendMessage(cfg.getMsg("saldo-atual", "&aSeu novo saldo e: &6{balance}")
                 .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
             return true;
@@ -154,7 +154,7 @@ public class CommandManager implements CommandExecutor {
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
         if (subCommand.equals("occupy")) { return handleOccupyCommand(player, args); }
         if (subCommand.equals("sell")) { return handleSellCommand(player, args); }
-        if (subCommand.equals("buy")) { return handleBuyCommand(player, args); }
+        if (subCommand.equals("adquirir")) { return handleAdquirirCommand(player, args); }
         if (subCommand.equals("unsell")) { return handleUnsellCommand(player, args); }
         
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
@@ -270,12 +270,12 @@ public class CommandManager implements CommandExecutor {
         return true;
     }
 
-    private boolean handleBuyCommand(Player player, String[] args) {
+    private boolean handleAdquirirCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
 
         if (args.length < 2) {
-            player.sendMessage(cfg.getMsg("ajuda.buy", "&cUse: /claim buy <novo-nome>"));
+            player.sendMessage(cfg.getMsg("ajuda.adquirir", "&cUse: /claim adquirir <novo-nome>"));
             return true;
         }
 
