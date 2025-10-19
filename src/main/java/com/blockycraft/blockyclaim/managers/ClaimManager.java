@@ -154,5 +154,8 @@ public class ClaimManager {
             System.out.println("[BlockyClaim] Erro ao carregar claims!");
             e.printStackTrace();
         }
+    } public List<Claim> getAllClaims() {
+        return this.claims;
     }
+    
 }
