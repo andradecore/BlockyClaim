@@ -53,7 +53,7 @@ Listeners interceptam eventos de construção, destruição, explosão (incluind
 - `/claim confirm <nome>`
   Confirma a criação de um terreno após selecionar os dois cantos.
 
-- `/claim occupy <novo-nome>`
+- `/claim ocupar <novo-nome>`
   Permite ocupar uma área que está abandonada (sem dono ativo) por um custo reduzido.
 
 ### Trust

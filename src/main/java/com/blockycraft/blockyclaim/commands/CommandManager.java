@@ -75,7 +75,7 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell <preco> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.adquirir", "&b/claim adquirir <novo-nome> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.occupy", "&b/claim occupy <novo-nome> &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.ocupar", "&b/claim ocupar <novo-nome> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust <jogador> &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust <jogador> &7- ...")));
                 break;
@@ -152,7 +152,7 @@ public class CommandManager implements CommandExecutor {
 
         if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
-        if (subCommand.equals("occupy")) { return handleOccupyCommand(player, args); }
+        if (subCommand.equals("ocupar")) { return handleOcuparCommand(player, args); }
         if (subCommand.equals("sell")) { return handleSellCommand(player, args); }
         if (subCommand.equals("adquirir")) { return handleAdquirirCommand(player, args); }
         if (subCommand.equals("unsell")) { return handleUnsellCommand(player, args); }
@@ -376,12 +376,12 @@ public class CommandManager implements CommandExecutor {
         return true;
     }
 
-    private boolean handleOccupyCommand(Player player, String[] args) {
+    private boolean handleOcuparCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
 
         if (args.length < 2) {
-            player.sendMessage(cfg.getMsg("ajuda.occupy", "&cUse: /claim occupy <novo-nome>"));
+            player.sendMessage(cfg.getMsg("ajuda.ocupar", "&cUse: /claim ocupar <novo-nome>"));
             return true;
         }
         
