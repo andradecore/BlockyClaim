@@ -2,72 +2,62 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.blockycraft</groupId>
-    <artifactId>BlockyClaim</artifactId>
+    <artifactId>blockyclaim</artifactId>
     <version>1.0</version>
-    <packaging>jar</packaging>
-
     <name>BlockyClaim</name>
-    <description>Plugin de protecao de terreno com economia baseada em ferro.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <minecraft.server.path>/minecraft-server</minecraft.server.path>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>1.7.3-beta-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${minecraft.server.path}/server.jar</systemPath>
-        </dependency>
-
-        <dependency>
-            <groupId>com.blockycraft</groupId>
-            <artifactId>blockyfactions</artifactId>
-            <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${minecraft.server.path}/plugins/BlockyFactions.jar</systemPath>
-        </dependency>
-    </dependencies>
-
     <build>
         <defaultGoal>clean package</defaultGoal>
-        <finalName>${project.name}-${project.version}</finalName>
-
+        <finalName>${project.name}</finalName>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>*.yml</include>
+                    <include>*.properties</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy-jar-to-plugins</id>
+                        <id>copy-jar-to-server</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <overwrite>true</overwrite>
                             <outputDirectory>${minecraft.server.path}/plugins</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}</directory>
+                                    <filtering>false</filtering>
                                     <includes>
                                         <include>${project.build.finalName}.jar</include>
                                     </includes>
@@ -79,4 +69,54 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>bukkit-repo</id>
+            <url>https://repo.bukkit.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>dynmap-repo</id>
+            <url>http://repo.sacredlabyrinth.net/artifactory/remote-repos</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.bukkit</groupId>
+            <artifactId>bukkit</artifactId>
+            <version>1.7.3-beta-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${minecraft.server.path}/server.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.blockycraft</groupId>
+            <artifactId>blockyfactions</artifactId>
+            <version>1.0.0</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${minecraft.server.path}/plugins/BlockyFactions.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>org.dynmap</groupId>
+            <artifactId>dynmap-api</artifactId>
+            <version>0.30.1</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${minecraft.server.path}/dynmap-api.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.blockycraft</groupId>
+            <artifactId>BlockyWar</artifactId>
+            <version>1.0.0</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${minecraft.server.path}/plugins/BlockyWar.jar</systemPath>
+        </dependency>
+
+    </dependencies>
 </project>

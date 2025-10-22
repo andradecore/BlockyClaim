@@ -1,34 +1,63 @@
 name: BlockyClaim
 main: com.blockycraft.blockyclaim.BlockyClaim
-version: 1.0
+version: 1.0 # Versao atualizada conforme sua indicacao
 author: Bernardo Zukerman
-description: Plugin de protecao de terreno com economia baseada em ferro.
-softdepend: [BlockyFactions]
+description: Plugin de protecao de terrenos estilo GriefPrevention adaptado para Beta 1.7.3.
 
-permissions:
-  blockyclaim.*:
-    description: Da acesso a todos os comandos do BlockyClaim.
-    default: op
-  blockyclaim.claim:
-    description: Permite o uso do comando /claim e seus subcomandos.
-    default: true
-  blockyclaim.trust:
-    description: Permite o uso do comando /trust.
-    default: true
-  blockyclaim.untrust:
-    description: Permite o uso do comando /untrust.
-    default: true
+softdepend:
+  - BlockyFactions
 
 commands:
   claim:
-    description: Compra e gerencia blocos de protecao.
-    usage: /claim <comprar|saldo|confirm>
-    permission: blockyclaim.claim # <-- LINHA ADICIONADA
+    description: Gerencia seus terrenos protegidos (claims).
+    aliases: [terreno]
+    usage: |
+      /claim saldo - Mostra seus blocos de protecao.
+      /claim comprar <qtde> - Compra blocos de protecao.
+      /claim confirm <nome> - Confirma a criacao de um claim.
+      /claim list [jogador] - Lista seus claims ou de outro jogador.
+      /claim sell <preco> - Coloca o claim atual a venda.
+      /claim adquirir <novo-nome> - Compra um claim que esta a venda.
+      /claim unsell - Cancela a venda do claim atual.
+      /claim ocupar <novo-nome> - Ocupa um claim abandonado.
   trust:
-    description: Concede permissao a um jogador em seu terreno.
+    description: Da permissao a um jogador no claim onde voce esta.
     usage: /trust <jogador>
-    permission: blockyclaim.trust # <-- LINHA ADICIONADA
   untrust:
-    description: Remove a permissao de um jogador em seu terreno.
+    description: Remove a permissao de um jogador no claim onde voce esta.
     usage: /untrust <jogador>
-    permission: blockyclaim.untrust # <-- LINHA ADICIONADA
+
+permissions:
+  blockyclaim.user:
+    description: Permissoes basicas para usar o sistema de claims.
+    default: true
+    children:
+      blockyclaim.claim: true
+      blockyclaim.trust: true
+      blockyclaim.untrust: true
+      blockyclaim.list.self: true
+
+  blockyclaim.admin:
+    description: Permissoes administrativas para o BlockyClaim.
+    default: op
+    children:
+      blockyclaim.user: true
+      blockyclaim.list.other: true # Permite /claim list <outro_jogador>
+      # Adicionar futuras permissoes de admin aqui (ex: blockyclaim.reload)
+
+  # Permissoes individuais (para maior controle)
+  blockyclaim.claim:
+    description: Permite usar todos os subcomandos do /claim (saldo, comprar, confirm, sell, etc.).
+    default: true
+  blockyclaim.trust:
+    description: Permite usar /trust.
+    default: true
+  blockyclaim.untrust:
+    description: Permite usar /untrust.
+    default: true
+  blockyclaim.list.self:
+    description: Permite usar /claim list (para si mesmo).
+    default: true
+  blockyclaim.list.other:
+    description: Permite usar /claim list [outro_jogador].
+    default: op

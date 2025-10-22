@@ -6,6 +6,7 @@ import com.blockycraft.blockyclaim.listeners.*;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
 import com.blockycraft.blockyclaim.visualization.VisualizationManager;
+import com.blockycraft.blockywar.api.BlockyWarAPI; // <-- NOVO IMPORT
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
@@ -14,8 +15,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class BlockyClaim extends JavaPlugin {
 
-    private static BlockyClaim instance; // <-- NOVO: Para acesso estático
-    private boolean factionsHookEnabled = false; // <-- NOVO: Flag de integração
+    private static BlockyClaim instance;
+    private boolean factionsHookEnabled = false;
+    private boolean warHookEnabled = false; // <-- NOVA VARIAVEL
 
     private ConfigManager configManager;
     private ClaimManager claimManager;
@@ -24,7 +26,7 @@ public class BlockyClaim extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this; // <-- NOVO: Define a instância estática
+        instance = this;
 
         this.configManager = new ConfigManager(this);
         this.claimManager = new ClaimManager(this);
@@ -34,7 +36,8 @@ public class BlockyClaim extends JavaPlugin {
         this.playerDataManager.loadPlayerData();
         this.claimManager.loadClaims();
 
-        setupFactionsHook(); // <-- NOVO: Chama o método de hook
+        setupFactionsHook();
+        setupWarHook(); // <-- NOVA CHAMADA
 
         registerListeners();
         registerCommands();
@@ -44,7 +47,7 @@ public class BlockyClaim extends JavaPlugin {
         System.out.println("[BlockyClaim] Plugin ativado com sucesso!");
     }
 
-    private void setupFactionsHook() { // <-- NOVO MÉTODO
+    private void setupFactionsHook() {
         if (getServer().getPluginManager().isPluginEnabled("BlockyFactions")) {
             this.factionsHookEnabled = true;
             System.out.println("[BlockyClaim] Hook com BlockyFactions ativado com sucesso!");
@@ -53,7 +56,27 @@ public class BlockyClaim extends JavaPlugin {
         }
     }
 
-    // ... (registerListeners e registerCommands continuam iguais) ...
+    /**
+     * NOVO METODO: Verifica a presenca do BlockyWar e inicializa a API.
+     */
+    private void setupWarHook() {
+        if (getServer().getPluginManager().isPluginEnabled("BlockyWar")) {
+            try {
+                // Tenta inicializar a API do BlockyWar
+                // A classe BlockyWarAPI sera carregada automaticamente se o plugin estiver presente
+                BlockyWarAPI.initialize(null); // Passamos null aqui pois a API e estatica
+                this.warHookEnabled = true;
+                System.out.println("[BlockyClaim] Hook com BlockyWar ativado com sucesso!");
+            } catch (NoClassDefFoundError e) {
+                // Isso pode acontecer se o JAR do BlockyWar nao contiver a API
+                System.out.println("[BlockyClaim] ERRO: BlockyWar encontrado, mas a BlockyWarAPI nao pode ser carregada.");
+                this.warHookEnabled = false;
+            }
+        } else {
+            System.out.println("[BlockyClaim] BlockyWar nao encontrado. A integracao de guerra esta desativada.");
+        }
+    }
+
 
     @Override
     public void onDisable() {
@@ -68,22 +91,28 @@ public class BlockyClaim extends JavaPlugin {
         System.out.println("[BlockyClaim] Plugin desativado.");
     }
 
-    // --- NOVOS GETTERS ---
-    public static BlockyClaim getInstance() { // <-- NOVO
+    // --- Getters ---
+    public static BlockyClaim getInstance() {
         return instance;
     }
 
-    public boolean isFactionsHookEnabled() { // <-- NOVO
+    public boolean isFactionsHookEnabled() {
         return factionsHookEnabled;
     }
 
-    // --- Getters antigos continuam aqui ---
+    /**
+     * NOVO GETTER: Verifica se a integracao com BlockyWar esta ativa.
+     * @return true se o hook com BlockyWar estiver ativo.
+     */
+    public boolean isWarHookEnabled() { // <-- NOVO GETTER
+        return warHookEnabled;
+    }
+
     public ConfigManager getConfigManager() { return configManager; }
     public ClaimManager getClaimManager() { return claimManager; }
     public PlayerDataManager getPlayerDataManager() { return playerDataManager; }
     public VisualizationManager getVisualizationManager() { return visualizationManager; }
     
-    // Cole aqui seus métodos registerListeners e registerCommands que já existem
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
         

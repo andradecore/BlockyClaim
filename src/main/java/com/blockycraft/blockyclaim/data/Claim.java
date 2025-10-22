@@ -1,7 +1,8 @@
 package com.blockycraft.blockyclaim.data;
 
-import com.blockycraft.blockyclaim.BlockyClaim; // <-- NOVO IMPORT
-import com.blockycraft.blockyfactions.api.BlockyFactionsAPI; // <-- NOVO IMPORT DA API
+import com.blockycraft.blockyclaim.BlockyClaim;
+import com.blockycraft.blockyfactions.api.BlockyFactionsAPI;
+import com.blockycraft.blockywar.api.BlockyWarAPI; // <-- NOVO IMPORT
 import org.bukkit.Location;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,8 +20,7 @@ public class Claim {
     private boolean forSale;
     private int salePrice;
 
-    // ... (Os construtores e outros getters/setters permanecem os mesmos) ...
-
+    // Construtores originais
     public Claim(String ownerName, String claimName, Location pos1, Location pos2) {
         this.ownerName = ownerName;
         this.claimName = claimName;
@@ -49,32 +49,48 @@ public class Claim {
         this.trustedPlayers = trusted;
     }
     
-    // --- MÉTODO ATUALIZADO ---
+    /**
+     * Verifica se um jogador tem permissao para interagir neste claim.
+     * A ordem de verificacao e: Dono -> Trust Manual -> Mesma Faccao -> Regras de Guerra.
+     * * @param playerName O nome do jogador a ser verificado.
+     * @return true se o jogador tiver permissao, false caso contrario.
+     */
     public boolean hasPermission(String playerName) {
-        // 1. O jogador é o dono?
+        // 1. O jogador e o dono?
         if (ownerName.equalsIgnoreCase(playerName)) {
             return true;
         }
 
-        // 2. O jogador está na lista de trust manual?
+        // 2. O jogador esta na lista de trust manual?
         if (trustedPlayers.contains(playerName.toLowerCase())) {
             return true;
         }
 
-        // 3. (NOVO) Verificação de Trust Automático por Facção
-        // Verifica se o hook com BlockyFactions está ativo
-        if (BlockyClaim.getInstance().isFactionsHookEnabled()) {
-            // Chama a API para ver se o dono do claim e o jogador estão na mesma facção
+        // 3. Verificacao de Trust Automatico por Faccao
+        BlockyClaim mainPlugin = BlockyClaim.getInstance(); // Pega a instancia principal
+        if (mainPlugin.isFactionsHookEnabled()) {
+            // Chama a API para ver se o dono do claim e o jogador estao na mesma faccao
             if (BlockyFactionsAPI.arePlayersInSameFaction(ownerName, playerName)) {
                 return true;
             }
         }
 
-        // Se nenhuma das condições for atendida, não tem permissão
+        // 4. (NOVO) Verificacao de Estado de Guerra
+        // Verifica se o hook com BlockyWar esta ativo
+        if (mainPlugin.isWarHookEnabled()) {
+            // Chama a API para ver se a guerra permite a interacao
+            // O proprio BlockyWarAPI.canPlayerInteract ja contem toda a logica
+            // de quem pode atacar quem (inimigos, aliados, traicoes).
+            if (BlockyWarAPI.canPlayerInteract(playerName, this)) {
+                return true;
+            }
+        }
+
+        // Se nenhuma das condicoes for atendida, nao tem permissao
         return false;
     }
 
-    // ... (O resto da classe continua igual) ...
+    // --- Getters e Setters (sem alteracoes) ---
 
     public String getOwnerName() { return ownerName; }
     public String getClaimName() { return claimName; }
