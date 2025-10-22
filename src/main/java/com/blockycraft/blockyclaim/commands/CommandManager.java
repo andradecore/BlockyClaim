@@ -15,7 +15,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-// import org.bukkit.material.MaterialData; // <-- IMPORT REMOVIDO
+// Import para comparar dados do item (nao necessario, mas mantido caso precise no futuro)
+// import org.bukkit.material.MaterialData; 
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +64,7 @@ public class CommandManager implements CommandExecutor {
     private void displayHelpPage(Player player, int page) {
         ConfigManager cfg = plugin.getConfigManager();
 
+        // Usa getRawMsg para evitar prefixo automatico
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---")));
 
         switch (page) {
@@ -82,6 +84,7 @@ public class CommandManager implements CommandExecutor {
 
                 break;
             default:
+                // Usa getMsg aqui, pois e uma mensagem de erro que pode se beneficiar do prefixo (se reativado)
                 player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
                 return;
         }
@@ -143,10 +146,12 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
                 return true;
             }
-            if (amountToBuy <= 0) {
-                player.sendMessage(cfg.getMsg("erro.numero-positivo", "&cA quantidade deve ser maior que zero."));
+            // --- NOVA VERIFICACAO ---
+            if (amountToBuy < 2) {
+                player.sendMessage(cfg.getMsg("erro.compra-minima", "&cVoce deve comprar no minimo 2 blocos.")); // Adicionar esta mensagem ao config
                 return true;
             }
+            // --- FIM DA NOVA VERIFICACAO ---
 
             Material itemCompra = cfg.getItemCompra();
             double custoPorBlocoDouble = cfg.getCustoPorBloco();
@@ -332,7 +337,6 @@ public class CommandManager implements CommandExecutor {
         }
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
-        // PlayerDataManager playerDataManager = plugin.getPlayerDataManager(); // <-- REMOVIDO (nao utilizado)
 
         if (args.length < 2) {
             player.sendMessage(cfg.getMsg("ajuda.adquirir", "&cUse: /claim adquirir <novo-nome>"));
@@ -391,8 +395,8 @@ public class CommandManager implements CommandExecutor {
             } else {
                 for (ItemStack item : seller.getInventory().getContents()) {
                     if (item != null &&
-                        item.getTypeId() == itemType.getId() && // Compara ID do tipo
-                        (item.getData() == null ? 0 : item.getData().getData()) == (paymentStack.getData() == null ? 0 : paymentStack.getData().getData()) && // Compara Data (byte), tratando null
+                        item.getTypeId() == itemType.getId() &&
+                        (item.getData() == null ? 0 : item.getData().getData()) == (paymentStack.getData() == null ? 0 : paymentStack.getData().getData()) &&
                         item.getAmount() < item.getMaxStackSize()) {
                          if (item.getAmount() + price <= item.getMaxStackSize()) {
                              sellerHasSpace = true;

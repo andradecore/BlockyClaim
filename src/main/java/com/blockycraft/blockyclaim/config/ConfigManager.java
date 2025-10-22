@@ -13,16 +13,14 @@ import java.util.Properties;
 
 public class ConfigManager {
 
-    private final BlockyClaim plugin; // Campo e necessario para getConfiguration() e getDataFolder()
+    private final BlockyClaim plugin; 
     private final Properties props = new Properties();
     private final File configFile; 
 
     public ConfigManager(BlockyClaim plugin) {
         this.plugin = plugin;
-        // Usa this.plugin explicitamente para clareza e para potencialmente remover o aviso
         this.configFile = new File(this.plugin.getDataFolder(), "config.properties"); 
         
-        // Garante que a pasta de dados exista
         if (!this.plugin.getDataFolder().exists()) {
             this.plugin.getDataFolder().mkdirs();
         }
@@ -34,7 +32,6 @@ public class ConfigManager {
     private void createDefaultConfigIfNotExists() {
         if (!configFile.exists()) {
             System.out.println("[BlockyClaim] Criando config.properties padrao...");
-            // Usa getClass() para obter o ClassLoader relativo a esta classe
             try (InputStream in = getClass().getClassLoader().getResourceAsStream("config.properties");
                  FileOutputStream out = new FileOutputStream(configFile)) {
                 
@@ -56,12 +53,13 @@ public class ConfigManager {
     }
 
     private void loadProperties() {
-        // Garante que o arquivo exista antes de tentar ler (foi criado se necessario)
         if (!configFile.exists()) {
              System.err.println("[BlockyClaim] ERRO: config.properties nao encontrado apos tentativa de criacao.");
              return;
         }
         try (FileInputStream fis = new FileInputStream(configFile)) {
+            // Limpa propriedades antigas antes de carregar novas
+            props.clear(); 
             props.load(fis);
         } catch (IOException e) {
             System.err.println("[BlockyClaim] ERRO: Nao foi possivel carregar o config.properties.");
@@ -77,35 +75,39 @@ public class ConfigManager {
 
     private int getInt(String key, int defaultValue) {
         try {
-            return Integer.parseInt(props.getProperty(key, String.valueOf(defaultValue)));
+            // Tenta obter a propriedade, se nao existir, usa o defaultValue como string
+            String propValue = props.getProperty(key);
+            if (propValue == null) {
+                System.err.println("[BlockyClaim] Aviso: Chave '" + key + "' nao encontrada no config.properties. Usando padrao: " + defaultValue);
+                return defaultValue;
+            }
+            return Integer.parseInt(propValue);
         } catch (NumberFormatException e) {
             System.err.println("[BlockyClaim] Aviso: Valor invalido para '" + key + "' no config.properties. Usando padrao: " + defaultValue);
             return defaultValue;
-        } catch (NullPointerException e) { // Adiciona checagem para chave ausente
-             System.err.println("[BlockyClaim] Aviso: Chave '" + key + "' nao encontrada no config.properties. Usando padrao: " + defaultValue);
-             return defaultValue;
         }
     }
     
     private double getDouble(String key, double defaultValue) {
         try {
-            return Double.parseDouble(props.getProperty(key, String.valueOf(defaultValue)));
+            String propValue = props.getProperty(key);
+             if (propValue == null) {
+                System.err.println("[BlockyClaim] Aviso: Chave '" + key + "' nao encontrada no config.properties. Usando padrao: " + defaultValue);
+                return defaultValue;
+            }
+            return Double.parseDouble(propValue);
         } catch (NumberFormatException e) {
             System.err.println("[BlockyClaim] Aviso: Valor invalido para '" + key + "' no config.properties. Usando padrao: " + defaultValue);
             return defaultValue;
-        } catch (NullPointerException e) {
-             System.err.println("[BlockyClaim] Aviso: Chave '" + key + "' nao encontrada no config.properties. Usando padrao: " + defaultValue);
-             return defaultValue;
-        }
+        } 
     }
 
     private boolean getBoolean(String key, boolean defaultValue) {
-        String value = props.getProperty(key); // Nao define valor padrao aqui para checar se existe
+        String value = props.getProperty(key); 
         if (value == null) {
              System.err.println("[BlockyClaim] Aviso: Chave '" + key + "' nao encontrada no config.properties. Usando padrao: " + defaultValue);
              return defaultValue;
         }
-        // Permite "true" ou "false" (case insensitive)
         return Boolean.parseBoolean(value); 
     }
 
@@ -163,13 +165,19 @@ public class ConfigManager {
 
     // --- Metodos de Mensagem ---
 
+    /**
+     * MODIFICADO: Retorna uma mensagem formatada SEM o prefixo global.
+     * O prefixo deve ser adicionado manualmente onde necessario, ou removido do config.
+     */
     public String getMsg(String path, String defaultValue) {
-        String prefixMsg = getString("mensagens.prefixo", ""); 
         String message = getString("mensagens." + path, defaultValue); 
-        String fullMessage = (prefixMsg != null && !prefixMsg.isEmpty()) ? prefixMsg + message : message;
-        return ChatColor.translateAlternateColorCodes('&', fullMessage);
+        // Apenas traduz as cores, nao adiciona mais o prefixo
+        return ChatColor.translateAlternateColorCodes('&', message); 
     }
     
+    /**
+     * Retorna uma mensagem formatada sem prefixo (comportamento inalterado).
+     */
     public String getRawMsg(String path, String defaultValue) {
         String message = getString("mensagens." + path, defaultValue);
         return ChatColor.translateAlternateColorCodes('&', message);
