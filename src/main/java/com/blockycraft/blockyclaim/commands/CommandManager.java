@@ -15,8 +15,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-// Import para comparar dados do item (nao necessario, mas mantido caso precise no futuro)
-// import org.bukkit.material.MaterialData; 
+
 import java.util.List;
 import java.util.Map;
 
@@ -63,33 +62,46 @@ public class CommandManager implements CommandExecutor {
 
     private void displayHelpPage(Player player, int page) {
         ConfigManager cfg = plugin.getConfigManager();
+        
+        // Obtem nome do item de compra para usar na ajuda
+        String itemCompraName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
 
         // Usa getRawMsg para evitar prefixo automatico
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.header", "&6--- Ajuda BlockyClaim ---")));
+        // Substitui {current} e {total} no CABECALHO
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.header", "&f--- Comandos de Claim (Pagina {current}/{total}) ---")
+            .replace("{current}", String.valueOf(page))
+            .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))
+        ));
 
         switch (page) {
             case 1:
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.saldo", "&b/claim saldo &7- Mostra seus blocos.")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.comprar", "&b/claim comprar <qtde> &7- Compra blocos.")));
+                // SUBSTITUI {item_name} na ajuda de comprar
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.comprar", "&b/claim comprar <quantidade> &7- Compra blocos com {item_name}.")
+                    .replace("{item_name}", itemCompraName) 
+                ));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.confirm", "&b/claim confirm <nome> &7- Confirma a criacao.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.list", "&b/claim list [jogador] &7- Lista claims.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.trust", "&b/trust <jogador> &7- Da permissao.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.untrust", "&b/untrust <jogador> &7- Remove permissao.")));
                 break;
             case 2:
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.sell", "&b/claim sell <preco> &7- Coloca a venda.")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.adquirir", "&b/claim adquirir <novo-nome> &7- Compra terreno a venda.")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.unsell", "&b/claim unsell &7- Cancela a venda.")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.ocupar", "&b/claim ocupar <novo-nome> &7- Ocupa abandonado.")));
+                 // SUBSTITUI {item_name} na ajuda de vender
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.sell", "&b/claim sell <preco> &7- Coloca o terreno atual a venda por itens {item_name}.")
+                     .replace("{item_name}", itemCompraName)
+                ));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.adquirir", "&b/claim adquirir <novo-nome> &7- Compra um terreno que esta a venda.")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.unsell", "&b/claim unsell &7- Tira o terreno atual do mercado.")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.ocupar", "&b/claim ocupar <novo-nome> &7- Ocupa um terreno abandonado (custo menor).")));
 
                 break;
             default:
-                // Usa getMsg aqui, pois e uma mensagem de erro que pode se beneficiar do prefixo (se reativado)
                 player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
                 return;
         }
 
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.footer", "&7--- Pagina {current}/{total} ---")
+        // SUBSTITUI {current} e {total} no RODAPE
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.footer", "&7--- Pagina {current}/{total} --- &fUse &b/claim <pagina>&f para navegar.")
             .replace("{current}", String.valueOf(page))
             .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))));
     }
@@ -105,7 +117,8 @@ public class CommandManager implements CommandExecutor {
         if (isInteger(args[0])) {
             try {
                 int page = Integer.parseInt(args[0]);
-                if (page > 0 && page <= TOTAL_HELP_PAGES) {
+                // Valida a pagina antes de exibir
+                if (page > 0 && page <= TOTAL_HELP_PAGES) { 
                     displayHelpPage(player, page);
                 } else {
                      player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
@@ -146,12 +159,11 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
                 return true;
             }
-            // --- NOVA VERIFICACAO ---
-            if (amountToBuy < 2) {
-                player.sendMessage(cfg.getMsg("erro.compra-minima", "&cVoce deve comprar no minimo 2 blocos.")); // Adicionar esta mensagem ao config
+            // Verifica minimo de compra
+            if (amountToBuy < 2) { 
+                player.sendMessage(cfg.getMsg("erro.compra-minima", "&cVoce deve comprar no minimo 2 blocos.")); 
                 return true;
             }
-            // --- FIM DA NOVA VERIFICACAO ---
 
             Material itemCompra = cfg.getItemCompra();
             double custoPorBlocoDouble = cfg.getCustoPorBloco();
@@ -180,6 +192,7 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
+        // Delega outros subcomandos
         if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
         if (subCommand.equals("ocupar")) { return handleOcuparCommand(player, args); }
@@ -191,7 +204,9 @@ public class CommandManager implements CommandExecutor {
         return true;
     }
 
-    private boolean handleTrustCommand(Player player, String[] args) {
+    // Handlers para /trust, /untrust, /claim sell, etc. (sem alteracoes significativas, omitidos por brevidade)
+    // ... (manter o restante dos metodos handle* como estavam na versao anterior) ...
+     private boolean handleTrustCommand(Player player, String[] args) {
          if (!player.hasPermission("blockyclaim.trust")) {
             player.sendMessage(plugin.getConfigManager().getMsg("erro.no-permission", "&cVoce nao tem permissao."));
             return true;
