@@ -62,12 +62,8 @@ public class CommandManager implements CommandExecutor {
 
     private void displayHelpPage(Player player, int page) {
         ConfigManager cfg = plugin.getConfigManager();
-        
-        // Obtem nome do item de compra para usar na ajuda
         String itemCompraName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
 
-        // Usa getRawMsg para evitar prefixo automatico
-        // Substitui {current} e {total} no CABECALHO
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.header", "&f--- Comandos de Claim (Pagina {current}/{total}) ---")
             .replace("{current}", String.valueOf(page))
             .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))
@@ -76,9 +72,8 @@ public class CommandManager implements CommandExecutor {
         switch (page) {
             case 1:
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.saldo", "&b/claim saldo &7- Mostra seus blocos.")));
-                // SUBSTITUI {item_name} na ajuda de comprar
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.comprar", "&b/claim comprar <quantidade> &7- Compra blocos com {item_name}.")
-                    .replace("{item_name}", itemCompraName) 
+                    .replace("{item_name}", itemCompraName)
                 ));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.confirm", "&b/claim confirm <nome> &7- Confirma a criacao.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.list", "&b/claim list [jogador] &7- Lista claims.")));
@@ -86,21 +81,18 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.untrust", "&b/untrust <jogador> &7- Remove permissao.")));
                 break;
             case 2:
-                 // SUBSTITUI {item_name} na ajuda de vender
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.sell", "&b/claim sell <preco> &7- Coloca o terreno atual a venda por itens {item_name}.")
                      .replace("{item_name}", itemCompraName)
                 ));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.adquirir", "&b/claim adquirir <novo-nome> &7- Compra um terreno que esta a venda.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.unsell", "&b/claim unsell &7- Tira o terreno atual do mercado.")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.ocupar", "&b/claim ocupar <novo-nome> &7- Ocupa um terreno abandonado (custo menor).")));
-
                 break;
             default:
                 player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
                 return;
         }
 
-        // SUBSTITUI {current} e {total} no RODAPE
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getRawMsg("ajuda.footer", "&7--- Pagina {current}/{total} --- &fUse &b/claim <pagina>&f para navegar.")
             .replace("{current}", String.valueOf(page))
             .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))));
@@ -117,8 +109,7 @@ public class CommandManager implements CommandExecutor {
         if (isInteger(args[0])) {
             try {
                 int page = Integer.parseInt(args[0]);
-                // Valida a pagina antes de exibir
-                if (page > 0 && page <= TOTAL_HELP_PAGES) { 
+                if (page > 0 && page <= TOTAL_HELP_PAGES) {
                     displayHelpPage(player, page);
                 } else {
                      player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
@@ -149,7 +140,9 @@ public class CommandManager implements CommandExecutor {
                 return true;
             }
             if (args.length < 2) {
-                player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <quantidade>"));
+                String itemCompraName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
+                player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <quantidade> - Compra blocos com {item_name}.")
+                    .replace("{item_name}", itemCompraName));
                 return true;
             }
             int amountToBuy;
@@ -159,9 +152,8 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
                 return true;
             }
-            // Verifica minimo de compra
-            if (amountToBuy < 2) { 
-                player.sendMessage(cfg.getMsg("erro.compra-minima", "&cVoce deve comprar no minimo 2 blocos.")); 
+            if (amountToBuy < 2) {
+                player.sendMessage(cfg.getMsg("erro.compra-minima", "&cVoce deve comprar no minimo 2 blocos."));
                 return true;
             }
 
@@ -192,7 +184,6 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
-        // Delega outros subcomandos
         if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
         if (subCommand.equals("ocupar")) { return handleOcuparCommand(player, args); }
@@ -204,9 +195,7 @@ public class CommandManager implements CommandExecutor {
         return true;
     }
 
-    // Handlers para /trust, /untrust, /claim sell, etc. (sem alteracoes significativas, omitidos por brevidade)
-    // ... (manter o restante dos metodos handle* como estavam na versao anterior) ...
-     private boolean handleTrustCommand(Player player, String[] args) {
+    private boolean handleTrustCommand(Player player, String[] args) {
          if (!player.hasPermission("blockyclaim.trust")) {
             player.sendMessage(plugin.getConfigManager().getMsg("erro.no-permission", "&cVoce nao tem permissao."));
             return true;
@@ -286,7 +275,12 @@ public class CommandManager implements CommandExecutor {
         ClaimManager claimManager = plugin.getClaimManager();
 
         if (args.length < 2) {
-            player.sendMessage(cfg.getMsg("ajuda.sell", "&cUse: /claim sell <preco>"));
+            // --- CORRECAO AQUI ---
+            String itemCompraName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
+            // Usa getMsg (sem Raw) e substitui o placeholder na mensagem de USO
+            player.sendMessage(cfg.getMsg("ajuda.sell", "&cUse: /claim sell <preco> - Coloca a venda por itens {item_name}.")
+                .replace("{item_name}", itemCompraName));
+            // --- FIM DA CORRECAO ---
             return true;
         }
 
@@ -311,11 +305,11 @@ public class CommandManager implements CommandExecutor {
 
         claim.putForSale(price);
         claimManager.saveClaims();
-        String itemName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
+        String itemName = cfg.getItemCompra().name().replace("_", " ").toLowerCase(); // Reutiliza nome do item
         player.sendMessage(cfg.getMsg("venda.colocada-a-venda", "&aVoce colocou o terreno '&6{claim_name}&a' a venda por &e{price} {item_name}&a.")
             .replace("{claim_name}", claim.getClaimName())
             .replace("{price}", String.valueOf(price))
-            .replace("{item_name}", itemName));
+            .replace("{item_name}", itemName)); // Usa variavel itemName
         return true;
     }
 
