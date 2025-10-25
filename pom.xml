@@ -38,7 +38,7 @@
 
     <build>
         <defaultGoal>clean package</defaultGoal>
-        <finalName>${project.name}-${project.version}</finalName>
+        <finalName>${project.name}</finalName>
 
         <plugins>
             <plugin>

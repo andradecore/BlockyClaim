@@ -15,13 +15,14 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
 import java.util.List;
 import java.util.Map;
 
 public class CommandManager implements CommandExecutor {
 
     private final BlockyClaim plugin;
-    private static final int TOTAL_HELP_PAGES = 2; // Define o número total de páginas
+    private static final int TOTAL_HELP_PAGES = 2;
 
     public CommandManager(BlockyClaim plugin) {
         this.plugin = plugin;
@@ -47,8 +48,7 @@ public class CommandManager implements CommandExecutor {
 
         return false;
     }
-    
-    // Método auxiliar para checar se uma string é um número inteiro
+
     private boolean isInteger(String s) {
         try {
             Integer.parseInt(s);
@@ -85,9 +85,9 @@ public class CommandManager implements CommandExecutor {
         }
 
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.footer", "&7--- Pagina {current}/{total} ---")
-            .replace(prefix, "")
-            .replace("{current}", String.valueOf(page))
-            .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))));
+                .replace(prefix, "")
+                .replace("{current}", String.valueOf(page))
+                .replace("{total}", String.valueOf(TOTAL_HELP_PAGES))));
     }
 
     private boolean handleClaimCommand(Player player, String[] args) {
@@ -110,43 +110,59 @@ public class CommandManager implements CommandExecutor {
         if (subCommand.equals("saldo")) {
             int balance = playerDataManager.getClaimBlocks(player.getName());
             player.sendMessage(cfg.getMsg("teu-saldo", "&aVoce tem &6{balance} &ablocos de protecao disponiveis.")
-                .replace("{balance}", String.valueOf(balance)));
+                    .replace("{balance}", String.valueOf(balance)));
             return true;
         }
 
         if (subCommand.equals("comprar")) {
             if (args.length < 2) {
-                player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <quantidade>"));
+                player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <qtde>"));
                 return true;
             }
+
             int amountToAdquirir;
-            try { amountToAdquirir = Integer.parseInt(args[1]); } 
-            catch (NumberFormatException e) {
+            try {
+                amountToAdquirir = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
                 player.sendMessage(cfg.getMsg("erro.numero-invalido", "&c'{arg}' nao e um numero valido.").replace("{arg}", args[1]));
                 return true;
             }
+
             if (amountToAdquirir <= 0) {
                 player.sendMessage(cfg.getMsg("erro.numero-positivo", "&cA quantidade deve ser maior que zero."));
                 return true;
             }
 
             Material itemCompra = cfg.getItemCompra();
-            int custoPorBloco = cfg.getCustoPorBloco();
-            int cost = amountToAdquirir * custoPorBloco;
+            double custoPorBloco = cfg.getCustoPorBloco();
 
-            if (!player.getInventory().contains(itemCompra, cost)) {
-                player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "&cVoce nao tem {item_name} suficientes! Precisa de {cost}.")
-                    .replace("{item_name}", itemCompra.name().replace("_", " ").toLowerCase())
-                    .replace("{cost}", String.valueOf(cost)));
+            double custoTotalDouble = amountToAdquirir * custoPorBloco;
+            int custoTotalInteiro = (int) Math.ceil(custoTotalDouble);
+
+            int quantidadeMinima = (int) Math.ceil(1.0 / custoPorBloco);
+
+            if (custoPorBloco < 1.0 && amountToAdquirir < quantidadeMinima) {
+                player.sendMessage(cfg.getMsg("erro.quantidade-minima", "&cCom o custo atual de &6{custo} &cpor bloco, voce precisa comprar no minimo &6{minimo} &cblocos.")
+                        .replace("{custo}", String.format("%.2f", custoPorBloco))
+                        .replace("{minimo}", String.valueOf(quantidadeMinima)));
                 return true;
             }
-            player.getInventory().removeItem(new ItemStack(itemCompra, cost));
+
+            if (!player.getInventory().contains(itemCompra, custoTotalInteiro)) {
+                player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "&cVoce nao tem {item_name} suficientes! Precisa de {cost}.")
+                        .replace("{item_name}", itemCompra.name().replace("_", " ").toLowerCase())
+                        .replace("{cost}", String.valueOf(custoTotalInteiro)));
+                return true;
+            }
+
+            player.getInventory().removeItem(new ItemStack(itemCompra, custoTotalInteiro));
             playerDataManager.addClaimBlocks(player.getName(), amountToAdquirir);
-            
+
             player.sendMessage(cfg.getMsg("blocos-comprados", "&aVoce comprou &6{amount} &ablocos de protecao!")
-                .replace("{amount}", String.valueOf(amountToAdquirir)));
+                    .replace("{amount}", String.valueOf(amountToAdquirir)));
             player.sendMessage(cfg.getMsg("saldo-atual", "&aSeu novo saldo e: &6{balance}")
-                .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
+                    .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
+
             return true;
         }
 
@@ -156,49 +172,57 @@ public class CommandManager implements CommandExecutor {
         if (subCommand.equals("sell")) { return handleSellCommand(player, args); }
         if (subCommand.equals("adquirir")) { return handleAdquirirCommand(player, args); }
         if (subCommand.equals("unsell")) { return handleUnsellCommand(player, args); }
-        
+
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
         return true;
     }
-    
+
     private boolean handleTrustCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
+
         if (args.length < 1) {
             player.sendMessage(cfg.getMsg("ajuda.trust", "&cUse: /trust <jogador>"));
             return true;
         }
+
         Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
         if (claim == null) {
             player.sendMessage(cfg.getMsg("precisa-estar-dentro", "&cVoce precisa estar dentro de um terreno seu para usar este comando."));
             return true;
         }
+
         if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
             player.sendMessage(cfg.getMsg("nao-e-dono", "&cVoce nao e o dono deste terreno."));
             return true;
         }
+
         String targetName = args[0];
         claim.trustPlayer(targetName);
         player.sendMessage(cfg.getMsg("trust-adicionado", "&a{target} &aagora tem permissao no seu terreno.")
-            .replace("{target}", targetName));
+                .replace("{target}", targetName));
+
         return true;
     }
 
     private boolean handleUntrustCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
+
         if (args.length < 1) {
             player.sendMessage(cfg.getMsg("ajuda.untrust", "§cUse: /untrust <jogador>"));
             return true;
         }
+
         Claim claim = plugin.getClaimManager().getClaimAt(player.getLocation());
         if (claim == null) {
             player.sendMessage(cfg.getMsg("precisa-estar-dentro", "§cVoce precisa estar dentro de um terreno seu para usar este comando."));
             return true;
         }
+
         if (!claim.getOwnerName().equalsIgnoreCase(player.getName())) {
             player.sendMessage(cfg.getMsg("nao-e-dono", "§cVoce nao e o dono deste terreno."));
             return true;
         }
-        
+
         String targetName = args[0];
 
         if (BlockyClaim.getInstance().isFactionsHookEnabled() && BlockyFactionsAPI.arePlayersInSameFaction(player.getName(), targetName)) {
@@ -208,14 +232,15 @@ public class CommandManager implements CommandExecutor {
 
         claim.untrustPlayer(targetName);
         player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.")
-            .replace("{target}", targetName));
+                .replace("{target}", targetName));
+
         return true;
     }
-    
+
     private boolean handleSellCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
-        
+
         if (args.length < 2) {
             player.sendMessage(cfg.getMsg("ajuda.sell", "&cUse: /claim sell <preco>"));
             return true;
@@ -243,9 +268,10 @@ public class CommandManager implements CommandExecutor {
         claim.putForSale(price);
         String itemName = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
         player.sendMessage(cfg.getMsg("venda.colocada-a-venda", "Terreno a venda!")
-            .replace("{claim_name}", claim.getClaimName())
-            .replace("{price}", String.valueOf(price))
-            .replace("{item_name}", itemName));
+                .replace("{claim_name}", claim.getClaimName())
+                .replace("{price}", String.valueOf(price))
+                .replace("{item_name}", itemName));
+
         return true;
     }
 
@@ -266,7 +292,8 @@ public class CommandManager implements CommandExecutor {
 
         claim.removeFromSale();
         player.sendMessage(cfg.getMsg("venda.removida-do-mercado", "Venda cancelada!")
-            .replace("{claim_name}", claim.getClaimName()));
+                .replace("{claim_name}", claim.getClaimName()));
+
         return true;
     }
 
@@ -290,14 +317,22 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
+        // NOVO: Validação do limite máximo de claims antes da compra
+        int maxClaims = cfg.getMaxClaimsPorJogador();
+        if (maxClaims > 0 && claimManager.getClaimsByOwner(player.getName()).size() >= maxClaims) {
+            player.sendMessage(cfg.getMsg("limite-claims-atingido", "&cVoce atingiu o seu limite de &6{max_claims} &cclaims.")
+                    .replace("{max_claims}", String.valueOf(maxClaims)));
+            return true;
+        }
+
         int price = claim.getSalePrice();
         Material itemType = cfg.getItemCompra();
         ItemStack payment = new ItemStack(itemType, price);
 
         if (!player.getInventory().contains(itemType, price)) {
             player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "Itens insuficientes!")
-                .replace("{item_name}", itemType.name().replace("_", " ").toLowerCase())
-                .replace("{cost}", String.valueOf(price)));
+                    .replace("{item_name}", itemType.name().replace("_", " ").toLowerCase())
+                    .replace("{cost}", String.valueOf(price)));
             return true;
         }
 
@@ -325,21 +360,23 @@ public class CommandManager implements CommandExecutor {
         claim.removeFromSale();
 
         player.sendMessage(cfg.getMsg("venda.compra-sucesso-comprador", "Compra realizada!")
-            .replace("{claim_name}", newClaimName));
-        
+                .replace("{claim_name}", newClaimName));
+
         seller.sendMessage(cfg.getMsg("venda.compra-sucesso-vendedor", "Terreno vendido!")
-            .replace("{claim_name_antigo}", oldClaimName)
-            .replace("{comprador}", player.getName())
-            .replace("{price}", String.valueOf(price))
-            .replace("{item_name}", itemName));
+                .replace("{claim_name_antigo}", oldClaimName)
+                .replace("{comprador}", player.getName())
+                .replace("{price}", String.valueOf(price))
+                .replace("{item_name}", itemName));
 
         System.out.println("[BlockyClaim] O jogador " + player.getName() + " comprou a claim '" + oldClaimName + "' de " + seller.getName() + " por " + price + " " + itemName);
+
         return true;
     }
 
     private boolean handleListCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
+
         String targetName;
         boolean isSelf = true;
 
@@ -357,7 +394,7 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(cfg.getMsg("list.no-claims-self", "&cVoce nao possui nenhuma claim."));
             } else {
                 player.sendMessage(cfg.getMsg("list.no-claims-other", "&c{player} &cnao possui nenhuma claim.")
-                    .replace("{player}", targetName));
+                        .replace("{player}", targetName));
             }
         } else {
             String prefix = cfg.getMsg("prefixo", "");
@@ -365,14 +402,15 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.header-self", "&e--- Suas Claims ---").replace(prefix, "")));
             } else {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.header-other", "&e--- Claims de {player} ---").replace(prefix, "")
-                    .replace("{player}", targetName)));
+                        .replace("{player}", targetName)));
             }
-            
+
             for (Claim claim : claims) {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("list.format", "&7- &f{claim_name}").replace(prefix, "")
-                    .replace("{claim_name}", claim.getClaimName())));
+                        .replace("{claim_name}", claim.getClaimName())));
             }
         }
+
         return true;
     }
 
@@ -384,9 +422,8 @@ public class CommandManager implements CommandExecutor {
             player.sendMessage(cfg.getMsg("ajuda.ocupar", "&cUse: /claim ocupar <novo-nome>"));
             return true;
         }
-        
-        Claim claim = claimManager.getClaimAt(player.getLocation());
 
+        Claim claim = claimManager.getClaimAt(player.getLocation());
         if (claim == null) {
             player.sendMessage(cfg.getMsg("abandono.nao-esta-em-claim", "&cVoce precisa estar dentro de um terreno abandonado para ocupa-lo."));
             return true;
@@ -397,38 +434,49 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
 
+        // NOVO: Validação do limite máximo de claims antes da ocupação
+        int maxClaims = cfg.getMaxClaimsPorJogador();
+        if (maxClaims > 0 && claimManager.getClaimsByOwner(player.getName()).size() >= maxClaims) {
+            player.sendMessage(cfg.getMsg("limite-claims-atingido", "&cVoce atingiu o seu limite de &6{max_claims} &cclaims.")
+                    .replace("{max_claims}", String.valueOf(maxClaims)));
+            return true;
+        }
+
         double custoOriginal = claim.getSize() * cfg.getCustoPorBloco();
         double percentualOcupar = cfg.getPercentualPrecoOcupar() / 100.0;
         int custoFinal = (int) Math.ceil(custoOriginal * percentualOcupar);
+
         Material itemCompra = cfg.getItemCompra();
 
         if (!player.getInventory().contains(itemCompra, custoFinal)) {
             player.sendMessage(cfg.getMsg("saldo-insuficiente-itens", "&cVoce nao tem {item_name} suficientes! Precisa de {cost}.")
-                .replace("{item_name}", itemCompra.name().replace("_", " ").toLowerCase())
-                .replace("{cost}", String.valueOf(custoFinal)));
+                    .replace("{item_name}", itemCompra.name().replace("_", " ").toLowerCase())
+                    .replace("{cost}", String.valueOf(custoFinal)));
             return true;
         }
-        
+
         player.getInventory().removeItem(new ItemStack(itemCompra, custoFinal));
 
         String antigoDono = claim.getOwnerName();
         String novoNome = args[1];
+
         claim.setOwner(player.getName());
         claim.setClaimName(novoNome);
         claim.getTrustedPlayers().clear();
-        
+
         player.sendMessage(cfg.getMsg("abandono.ocupado-sucesso", "&aVoce ocupou o terreno abandonado! O novo nome e '&6{claim_name}&a'.")
-            .replace("{claim_name}", novoNome));
-            
+                .replace("{claim_name}", novoNome));
+
         System.out.println("[BlockyClaim] O jogador " + player.getName() + " ocupou a claim '" + claim.getClaimName() + "' que pertencia a " + antigoDono);
-        
+
         return true;
     }
 
     private boolean handleConfirmCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
+
         if (args.length < 2) {
-            player.sendMessage(cfg.getMsg("ajuda.confirm", "&cUse: /claim confirm <nome-da-claim>"));
+            player.sendMessage(cfg.getMsg("ajuda.confirm", "&cUse: /claim confirm <nome>"));
             return true;
         }
 
@@ -443,11 +491,11 @@ public class CommandManager implements CommandExecutor {
         String claimName = args[1];
         ClaimManager claimManager = plugin.getClaimManager();
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
-        
+
         int maxClaims = cfg.getMaxClaimsPorJogador();
         if (maxClaims > 0 && claimManager.getClaimsByOwner(player.getName()).size() >= maxClaims) {
             player.sendMessage(cfg.getMsg("limite-claims-atingido", "&cVoce atingiu o seu limite de &6{max_claims} &cclaims.")
-                .replace("{max_claims}", String.valueOf(maxClaims)));
+                    .replace("{max_claims}", String.valueOf(maxClaims)));
             return true;
         }
 
@@ -462,24 +510,25 @@ public class CommandManager implements CommandExecutor {
 
         if (playerBlocks < claimSize) {
             player.sendMessage(cfg.getMsg("blocos-insuficientes", "&cVoce nao tem blocos de protecao suficientes! (&6{needed}&c/&6{has}&c)")
-                .replace("{needed}", String.valueOf(claimSize))
-                .replace("{has}", String.valueOf(playerBlocks)));
+                    .replace("{needed}", String.valueOf(claimSize))
+                    .replace("{has}", String.valueOf(playerBlocks)));
             return true;
         }
-        
+
         Claim newClaim = new Claim(player.getName(), claimName, corners[0], corners[1]);
         playerDataManager.removeClaimBlocks(player.getName(), claimSize);
         claimManager.addClaim(newClaim);
-        
+
         pending.remove(player.getName());
 
         player.sendMessage(cfg.getMsg("claim-criada-sucesso", "&aProtecao '&6{claim_name}&a' criada com sucesso! (&6{size} &ablocos)")
-            .replace("{claim_name}", claimName)
-            .replace("{size}", String.valueOf(claimSize)));
+                .replace("{claim_name}", claimName)
+                .replace("{size}", String.valueOf(claimSize)));
         player.sendMessage(cfg.getMsg("data-criacao", "&aData de criacao: &7{date}")
-            .replace("{date}", newClaim.getFormattedCreationDate()));
+                .replace("{date}", newClaim.getFormattedCreationDate()));
         player.sendMessage(cfg.getMsg("saldo-atual", "&aSeu novo saldo e: &6{balance}")
-            .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
+                .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
+
         return true;
     }
 }

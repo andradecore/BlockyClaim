@@ -17,17 +17,17 @@ public class ConfigManager {
 
     public ConfigManager(BlockyClaim plugin) {
         File configFile = new File(plugin.getDataFolder(), "config.properties");
-        
+
         if (!configFile.exists()) {
             plugin.getDataFolder().mkdirs();
             try (InputStream in = BlockyClaim.class.getClassLoader().getResourceAsStream("config.properties");
                  FileOutputStream out = new FileOutputStream(configFile)) {
-                
+
                 if (in == null) {
                     System.out.println("[BlockyClaim] ERRO: config.properties nao encontrado no .jar!");
                     return;
                 }
-                
+
                 byte[] buffer = new byte[1024];
                 int len;
                 while ((len = in.read(buffer)) > 0) {
@@ -37,7 +37,7 @@ public class ConfigManager {
                 e.printStackTrace();
             }
         }
-        
+
         try (FileInputStream fis = new FileInputStream(configFile)) {
             props.load(fis);
         } catch (IOException e) {
@@ -57,6 +57,14 @@ public class ConfigManager {
         }
     }
 
+    private double getDouble(String key, double defaultValue) {
+        try {
+            return Double.parseDouble(props.getProperty(key, String.valueOf(defaultValue)));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private boolean getBoolean(String key, boolean defaultValue) {
         return Boolean.parseBoolean(props.getProperty(key, String.valueOf(defaultValue)));
     }
@@ -68,10 +76,16 @@ public class ConfigManager {
             return Material.IRON_INGOT;
         }
     }
-    
-    public int getCustoPorBloco() { return getInt("economia.custo-por-bloco", 1); }
-    public int getBlocosIniciais() { return getInt("economia.blocos-iniciais", 100); }
-    
+
+    // ATUALIZADO: Agora retorna double para suportar custos fracionários
+    public double getCustoPorBloco() {
+        return getDouble("economia.custo-por-bloco", 1.0);
+    }
+
+    public int getBlocosIniciais() {
+        return getInt("economia.blocos-iniciais", 100);
+    }
+
     public Material getFerramentaClaim() {
         try {
             return Material.valueOf(getString("regras.ferramenta-claim", "GOLD_SPADE").toUpperCase());
@@ -80,22 +94,32 @@ public class ConfigManager {
         }
     }
 
-    public int getTamanhoMinimoClaim() { return getInt("regras.tamanho-minimo-claim", 100); }
-    public int getMaxClaimsPorJogador() { return getInt("regras.max-claims-por-jogador", 5); }
-    
-    // ATUALIZADO: Renomeado de 'getDiasParaAbandono' para 'getHorasParaAbandono'
-    public int getHorasParaAbandono() { return getInt("regras.horas-para-abandono", 24); }
-    
-    public int getPercentualPrecoOcupar() { return getInt("economia.percentual-preco-ocupar", 30); }
+    public int getTamanhoMinimoClaim() {
+        return getInt("regras.tamanho-minimo-claim", 100);
+    }
 
-    public boolean isAvisoFronteiraAtivado() { return getBoolean("funcionalidades.avisar-ao-entrar-na-claim", true); }
+    public int getMaxClaimsPorJogador() {
+        return getInt("regras.max-claims-por-jogador", 5);
+    }
+
+    public int getHorasParaAbandono() {
+        return getInt("regras.horas-para-abandono", 24);
+    }
+
+    public int getPercentualPrecoOcupar() {
+        return getInt("economia.percentual-preco-ocupar", 30);
+    }
+
+    public boolean isAvisoFronteiraAtivado() {
+        return getBoolean("funcionalidades.avisar-ao-entrar-na-claim", true);
+    }
 
     public String getMsg(String path, String defaultValue) {
         String prefix = getString("mensagens.prefixo", "");
         String message = getString("mensagens." + path, defaultValue);
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
     }
-    
+
     public String getRawMsg(String path, String defaultValue) {
         String message = getString("mensagens." + path, defaultValue);
         return ChatColor.translateAlternateColorCodes('&', message);
