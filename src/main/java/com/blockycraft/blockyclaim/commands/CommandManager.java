@@ -68,9 +68,9 @@ public class CommandManager implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.cancelar", "&b/claim cancelar &7- Cancela a selecao de claim atual.")));
                 break;
             case 2:
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.sell", "&b/claim sell  &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.anunciar", "&b/claim anunciar  &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.adquirir", "&b/claim adquirir  &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unsell", "&b/claim unsell &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unanunciar", "&b/claim unanunciar &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.ocupar", "&b/claim ocupar &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust  &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust  &7- ...")));
@@ -161,9 +161,9 @@ public class CommandManager implements CommandExecutor {
         if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
         if (subCommand.equals("ocupar")) { return handleOcuparCommand(player, args); }
-        if (subCommand.equals("sell")) { return handleSellCommand(player, args); }
+        if (subCommand.equals("anunciar")) { return handleAnunciarCommand(player, args); }
         if (subCommand.equals("adquirir")) { return handleAdquirirCommand(player, args); }
-        if (subCommand.equals("unsell")) { return handleUnsellCommand(player, args); }
+        if (subCommand.equals("unanunciar")) { return handleUnanunciarCommand(player, args); }
         player.sendMessage(cfg.getMsg("erro.comando-desconhecido", "&cComando desconhecido. Use /claim para ajuda."));
         return true;
     }
@@ -219,11 +219,11 @@ public class CommandManager implements CommandExecutor {
     // Os métodos abaixo permanecem como no original.
     // Adapte conforme necessidade para integração com o novo /claim cancelar.
 
-    private boolean handleSellCommand(Player player, String[] args) {
+    private boolean handleAnunciarCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
         if (args.length < 2) {
-            player.sendMessage(cfg.getMsg("ajuda.sell", "&cUse: /claim sell <preco>"));
+            player.sendMessage(cfg.getMsg("ajuda.anunciar", "&cUse: /claim anunciar <preco>"));
             return true;
         }
         Claim claim = claimManager.getClaimAt(player.getLocation());
@@ -251,7 +251,7 @@ public class CommandManager implements CommandExecutor {
         return true;
     }
 
-    private boolean handleUnsellCommand(Player player, String[] args) {
+    private boolean handleUnanunciarCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();
         ClaimManager claimManager = plugin.getClaimManager();
         Claim claim = claimManager.getClaimAt(player.getLocation());
@@ -300,17 +300,17 @@ public class CommandManager implements CommandExecutor {
                     .replace("{cost}", String.valueOf(price)));
             return true;
         }
-        Player seller = plugin.getServer().getPlayer(claim.getOwnerName());
-        if (seller == null || !seller.isOnline()) {
+        Player anunciarer = plugin.getServer().getPlayer(claim.getOwnerName());
+        if (anunciarer == null || !anunciarer.isOnline()) {
             player.sendMessage(cfg.getMsg("erro.vendedor-offline", "&cO dono deste terreno nao esta online."));
             return true;
         }
-        if (seller.getInventory().firstEmpty() == -1) {
+        if (anunciarer.getInventory().firstEmpty() == -1) {
             player.sendMessage(cfg.getMsg("erro.inventario-vendedor-cheio", "&cO inventario do vendedor esta cheio!"));
             return true;
         }
         player.getInventory().removeItem(payment);
-        seller.getInventory().addItem(payment);
+        anunciarer.getInventory().addItem(payment);
         String oldClaimName = claim.getClaimName();
         String newClaimName = args[1];
         String itemName = itemType.name().replace("_", " ").toLowerCase();
@@ -320,12 +320,12 @@ public class CommandManager implements CommandExecutor {
         claim.removeFromSale();
         player.sendMessage(cfg.getMsg("venda.compra-sucesso-comprador", "Compra realizada!")
                 .replace("{claim_name}", newClaimName));
-        seller.sendMessage(cfg.getMsg("venda.compra-sucesso-vendedor", "Terreno vendido!")
+        anunciarer.sendMessage(cfg.getMsg("venda.compra-sucesso-vendedor", "Terreno vendido!")
                 .replace("{claim_name_antigo}", oldClaimName)
                 .replace("{comprador}", player.getName())
                 .replace("{price}", String.valueOf(price))
                 .replace("{item_name}", itemName));
-        System.out.println("[BlockyClaim] O jogador " + player.getName() + " comprou a claim '" + oldClaimName + "' de " + seller.getName() + " por " + price + " " + itemName);
+        System.out.println("[BlockyClaim] O jogador " + player.getName() + " comprou a claim '" + oldClaimName + "' de " + anunciarer.getName() + " por " + price + " " + itemName);
         return true;
     }
 

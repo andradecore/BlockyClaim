@@ -41,13 +41,13 @@ Listeners interceptam eventos de construção, destruição, explosão (incluind
 - `/claim list [jogador]`
   Lista todas as áreas protegidas (claims) registradas para o seu jogador ou para outro.
 
-- `/claim sell <preço>`
+- `/claim anunciar <preço>`
   Coloca a área de proteção onde você está à venda pelo preço definido.
 
 - `/claim adquirir <novo-nome>`
   Permite comprar uma área de proteção que está à venda, definindo um novo nome para ela.
 
-- `/claim unsell`
+- `/claim unanunciar`
   Retira do mercado um terreno seu que estava à venda.
 
 - `/claim confirm <nome>`
