@@ -6,6 +6,7 @@ import com.blockycraft.blockyclaim.data.Claim;
 import com.blockycraft.blockyclaim.listeners.ClaimToolListener;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
+import com.blockycraft.blockyclaim.database.DatabaseManager;
 import com.blockycraft.blockyfactions.api.BlockyFactionsAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -15,7 +16,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +35,6 @@ public class CommandManager implements CommandExecutor {
         }
         Player player = (Player) sender;
         String commandName = command.getName().toLowerCase();
-
         if (commandName.equals("claim")) {
             return handleClaimCommand(player, args);
         } else if (commandName.equals("trust")) {
@@ -62,18 +61,18 @@ public class CommandManager implements CommandExecutor {
         switch (page) {
             case 1:
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.saldo", "&b/claim saldo &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar  &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm  &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.comprar", "&b/claim comprar &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.confirm", "&b/claim confirm &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.list", "&b/claim list [jogador] &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.cancelar", "&b/claim cancelar &7- Cancela a selecao de claim atual.")));
                 break;
             case 2:
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.anunciar", "&b/claim anunciar  &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.adquirir", "&b/claim adquirir  &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.anunciar", "&b/claim anunciar &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.adquirir", "&b/claim adquirir &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.unanunciar", "&b/claim unanunciar &7- ...")));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.ocupar", "&b/claim ocupar &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust  &7- ...")));
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust  &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.trust", "&b/trust &7- ...")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', cfg.getMsg("ajuda.untrust", "&b/untrust &7- ...")));
                 break;
             default:
                 player.sendMessage(cfg.getMsg("erro.pagina-invalida", "&cPagina invalida."));
@@ -91,7 +90,7 @@ public class CommandManager implements CommandExecutor {
             displayHelpPage(player, 1);
             return true;
         }
-        // Novo comando: /claim cancelar
+
         if (args[0].equalsIgnoreCase("cancelar")) {
             Map<String, Location[]> pending = ClaimToolListener.getPendingConfirmations();
             if (pending.containsKey(player.getName())) {
@@ -108,8 +107,10 @@ public class CommandManager implements CommandExecutor {
             displayHelpPage(player, page);
             return true;
         }
+
         String subCommand = args[0].toLowerCase();
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
+        DatabaseManager dbManager = plugin.getDatabaseManager();
 
         if (subCommand.equals("saldo")) {
             int balance = playerDataManager.getClaimBlocks(player.getName());
@@ -117,6 +118,7 @@ public class CommandManager implements CommandExecutor {
                     .replace("{balance}", String.valueOf(balance)));
             return true;
         }
+
         if (subCommand.equals("comprar")) {
             if (args.length < 2) {
                 player.sendMessage(cfg.getMsg("ajuda.comprar", "&cUse: /claim comprar <qtde>"));
@@ -156,8 +158,18 @@ public class CommandManager implements CommandExecutor {
                     .replace("{amount}", String.valueOf(amountToAdquirir)));
             player.sendMessage(cfg.getMsg("saldo-atual", "&aSeu novo saldo e: &6{balance}")
                     .replace("{balance}", String.valueOf(playerDataManager.getClaimBlocks(player.getName()))));
+
+            // REGISTRA A COMPRA NO BANCO!
+            String uuid = player.getUniqueId().toString();
+            String username = player.getName();
+            int blocksBought = amountToAdquirir;
+            int ironBarsSpent = custoTotalInteiro;
+            long boughtAt = System.currentTimeMillis() / 1000L;  // Segundos UTC
+            dbManager.logCompra(uuid, username, blocksBought, ironBarsSpent, boughtAt);
+
             return true;
         }
+
         if (subCommand.equals("confirm")) { return handleConfirmCommand(player, args); }
         if (subCommand.equals("list")) { return handleListCommand(player, args); }
         if (subCommand.equals("ocupar")) { return handleOcuparCommand(player, args); }
@@ -185,8 +197,7 @@ public class CommandManager implements CommandExecutor {
         }
         String targetName = args[0];
         claim.trustPlayer(targetName);
-        player.sendMessage(cfg.getMsg("trust-adicionado", "&a{target} agora tem permissao no seu terreno.")
-                .replace("{target}", targetName));
+        player.sendMessage(cfg.getMsg("trust-adicionado", "&a{target} agora tem permissao no seu terreno.").replace("{target}", targetName));
         return true;
     }
 
@@ -211,13 +222,9 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
         claim.untrustPlayer(targetName);
-        player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.")
-                .replace("{target}", targetName));
+        player.sendMessage(cfg.getMsg("untrust-removido", "§a{target} §anao tem mais permissao no seu terreno.").replace("{target}", targetName));
         return true;
     }
-
-    // Os métodos abaixo permanecem como no original.
-    // Adapte conforme necessidade para integração com o novo /claim cancelar.
 
     private boolean handleAnunciarCommand(Player player, String[] args) {
         ConfigManager cfg = plugin.getConfigManager();

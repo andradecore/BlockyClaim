@@ -2,6 +2,7 @@ package com.blockycraft.blockyclaim;
 
 import com.blockycraft.blockyclaim.commands.CommandManager;
 import com.blockycraft.blockyclaim.config.ConfigManager;
+import com.blockycraft.blockyclaim.database.DatabaseManager;
 import com.blockycraft.blockyclaim.listeners.*;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
@@ -11,40 +12,48 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import java.io.File;
 
 public class BlockyClaim extends JavaPlugin {
-
-    private static BlockyClaim instance; // <-- NOVO: Para acesso estático
-    private boolean factionsHookEnabled = false; // <-- NOVO: Flag de integração
-
+    private static BlockyClaim instance;
+    private boolean factionsHookEnabled = false;
     private ConfigManager configManager;
     private ClaimManager claimManager;
     private PlayerDataManager playerDataManager;
     private VisualizationManager visualizationManager;
+    private DatabaseManager databaseManager; // NOVO: gerenciador do banco de compras
 
     @Override
     public void onEnable() {
-        instance = this; // <-- NOVO: Define a instância estática
-
+        instance = this;
         this.configManager = new ConfigManager(this);
         this.claimManager = new ClaimManager(this);
         this.playerDataManager = new PlayerDataManager(this);
         this.visualizationManager = new VisualizationManager(this);
-        
+
+        // Inicializa banco de dados SQLite para compras
+        try {
+            File dbFile = new File(getDataFolder(), "compras.db");
+            databaseManager = new DatabaseManager(dbFile.getAbsolutePath());
+            System.out.println("[BlockyClaim] Banco de dados de compras operacional.");
+        } catch (Exception e) {
+            System.out.println("[BlockyClaim] Erro ao iniciar banco de dados de compras!");
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         this.playerDataManager.loadPlayerData();
         this.claimManager.loadClaims();
-
-        setupFactionsHook(); // <-- NOVO: Chama o método de hook
-
+        setupFactionsHook();
         registerListeners();
         registerCommands();
-        
-        this.visualizationManager.start();
 
+        this.visualizationManager.start();
         System.out.println("[BlockyClaim] Plugin ativado com sucesso!");
     }
 
-    private void setupFactionsHook() { // <-- NOVO MÉTODO
+    private void setupFactionsHook() {
         if (getServer().getPluginManager().isPluginEnabled("BlockyFactions")) {
             this.factionsHookEnabled = true;
             System.out.println("[BlockyClaim] Hook com BlockyFactions ativado com sucesso!");
@@ -53,8 +62,6 @@ public class BlockyClaim extends JavaPlugin {
         }
     }
 
-    // ... (registerListeners e registerCommands continuam iguais) ...
-
     @Override
     public void onDisable() {
         if (visualizationManager != null) {
@@ -62,31 +69,33 @@ public class BlockyClaim extends JavaPlugin {
                 visualizationManager.clearBorders(player);
             }
         }
-        
         this.playerDataManager.savePlayerData();
         this.claimManager.saveClaims();
+        if (databaseManager != null) {
+            databaseManager.closeConnection();
+            System.out.println("[BlockyClaim] Banco de dados de compras fechado.");
+        }
         System.out.println("[BlockyClaim] Plugin desativado.");
     }
 
-    // --- NOVOS GETTERS ---
-    public static BlockyClaim getInstance() { // <-- NOVO
+    // NOVOS GETTERS
+    public static BlockyClaim getInstance() {
         return instance;
     }
-
-    public boolean isFactionsHookEnabled() { // <-- NOVO
+    public boolean isFactionsHookEnabled() {
         return factionsHookEnabled;
     }
-
-    // --- Getters antigos continuam aqui ---
     public ConfigManager getConfigManager() { return configManager; }
     public ClaimManager getClaimManager() { return claimManager; }
     public PlayerDataManager getPlayerDataManager() { return playerDataManager; }
     public VisualizationManager getVisualizationManager() { return visualizationManager; }
-    
-    // Cole aqui seus métodos registerListeners e registerCommands que já existem
+
+    // NOVO GETTER DatabaseManager
+    public DatabaseManager getDatabaseManager() { return databaseManager; }
+
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
-        
+
         pm.registerEvent(Type.PLAYER_JOIN, new PlayerJoinListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_INTERACT, new ClaimToolListener(this), Priority.Normal, this);
@@ -95,7 +104,6 @@ public class BlockyClaim extends JavaPlugin {
         pm.registerEvent(Type.PLAYER_INTERACT, new InteractionListener(this), Priority.Normal, this);
         pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
         pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this);
-
         System.out.println("[BlockyClaim] Listeners de eventos registrados.");
     }
 
