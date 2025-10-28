@@ -17,6 +17,17 @@ BlockyClaim é um plugin de proteção de terras para o servidor BlockyCRAFT. Pe
 - Permite conceder e remover direitos de construção para outros jogadores.
 - Armazena saldo de claims e logins em arquivos próprios no servidor.
 
+## Histórico de Compras com SQLite
+
+A partir desta versão, todas as compras de blocos de proteção são **registradas automaticamente** em um banco de dados SQLite local (`compras.db`). Cada transação contém:
+- UUID do jogador
+- Nome do jogador
+- Quantidade de blocos adquiridos
+- Barras de ferro gastas\
+- Timestamp da compra (UTC segundos)
+
+Você pode consultar os dados pelo arquivo `compras.db` presente na pasta do plugin (`plugins/BlockyClaim/compras.db`), usando qualquer ferramenta compatível com SQLite.
+
 ## Integração com BlockyFactions
 
 Quando o plugin [BlockyFactions](https://github.com/andradecore/BlockyFactions) está ativo no servidor, uma nova mecânica é habilitada:
