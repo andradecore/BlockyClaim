@@ -3,6 +3,7 @@ package com.blockycraft.blockyclaim;
 import com.blockycraft.blockyclaim.commands.CommandManager;
 import com.blockycraft.blockyclaim.config.ConfigManager;
 import com.blockycraft.blockyclaim.database.DatabaseManager;
+import com.blockycraft.blockyclaim.database.DatabaseManagerClaims;
 import com.blockycraft.blockyclaim.listeners.*;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
@@ -21,7 +22,8 @@ public class BlockyClaim extends JavaPlugin {
     private ClaimManager claimManager;
     private PlayerDataManager playerDataManager;
     private VisualizationManager visualizationManager;
-    private DatabaseManager databaseManager; // NOVO: gerenciador do banco de compras
+    private DatabaseManager databaseManager;
+    private DatabaseManagerClaims databaseManagerClaims;
 
     @Override
     public void onEnable() {
@@ -31,13 +33,23 @@ public class BlockyClaim extends JavaPlugin {
         this.playerDataManager = new PlayerDataManager(this);
         this.visualizationManager = new VisualizationManager(this);
 
-        // Inicializa banco de dados SQLite para compras
         try {
             File dbFile = new File(getDataFolder(), "compras.db");
             databaseManager = new DatabaseManager(dbFile.getAbsolutePath());
             System.out.println("[BlockyClaim] Banco de dados de compras operacional.");
         } catch (Exception e) {
             System.out.println("[BlockyClaim] Erro ao iniciar banco de dados de compras!");
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        try {
+            File claimsFile = new File(getDataFolder(), "claims.db");
+            databaseManagerClaims = new DatabaseManagerClaims(claimsFile.getAbsolutePath());
+            System.out.println("[BlockyClaim] Banco de dados de claims operacional.");
+        } catch (Exception e) {
+            System.out.println("[BlockyClaim] Erro ao iniciar banco de dados de claims!");
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -75,10 +87,13 @@ public class BlockyClaim extends JavaPlugin {
             databaseManager.closeConnection();
             System.out.println("[BlockyClaim] Banco de dados de compras fechado.");
         }
+        if (databaseManagerClaims != null) {
+            databaseManagerClaims.closeConnection();
+            System.out.println("[BlockyClaim] Banco de dados de claims fechado.");
+        }
         System.out.println("[BlockyClaim] Plugin desativado.");
     }
 
-    // NOVOS GETTERS
     public static BlockyClaim getInstance() {
         return instance;
     }
@@ -89,9 +104,8 @@ public class BlockyClaim extends JavaPlugin {
     public ClaimManager getClaimManager() { return claimManager; }
     public PlayerDataManager getPlayerDataManager() { return playerDataManager; }
     public VisualizationManager getVisualizationManager() { return visualizationManager; }
-
-    // NOVO GETTER DatabaseManager
     public DatabaseManager getDatabaseManager() { return databaseManager; }
+    public DatabaseManagerClaims getDatabaseManagerClaims() { return databaseManagerClaims; }
 
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
