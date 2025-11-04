@@ -69,6 +69,25 @@ public class ClaimManager {
         return null;
     }
 
+    public List<Claim> getNearbyClaims(Location playerLoc, int distance) {
+        List<Claim> nearbyClaims = new ArrayList<>();
+        String worldName = playerLoc.getWorld().getName();
+        for (Claim claim : claims) {
+            if (!claim.getWorldName().equals(worldName)) continue;
+
+            int dx = Math.max(claim.getMinX() - playerLoc.getBlockX(), playerLoc.getBlockX() - claim.getMaxX());
+            int dz = Math.max(claim.getMinZ() - playerLoc.getBlockZ(), playerLoc.getBlockZ() - claim.getMaxZ());
+            dx = Math.max(dx, 0);
+            dz = Math.max(dz, 0);
+
+            double dist = Math.sqrt(dx * dx + dz * dz);
+            if (dist <= distance) {
+                nearbyClaims.add(claim);
+            }
+        }
+        return nearbyClaims;
+    }
+
     public List<Claim> getClaimsByOwner(String ownerName) {
         List<Claim> ownerClaims = new ArrayList<Claim>();
         for (Claim claim : claims) {

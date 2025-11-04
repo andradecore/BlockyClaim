@@ -245,9 +245,11 @@ public class CommandManager implements CommandExecutor {
         }
 
         // Remove antigas claims do jogador na área
+        /*
         for (Claim c : overlapped) {
             claimManager.removeClaim(c);
         }
+        */
 
         if (blocksToPay > 0) {
             playerDataManager.removeClaimBlocks(player.getName(), blocksToPay);
