@@ -33,15 +33,12 @@ public class ClaimManager {
         if (horasParaAbandono <= 0) {
             return false;
         }
-
         long ultimoLogin = plugin.getPlayerDataManager().getLastLogin(claim.getOwnerName());
         if (ultimoLogin == 0) {
             return false;
         }
-
         long tempoInativoMillis = System.currentTimeMillis() - ultimoLogin;
         long horasInativo = TimeUnit.MILLISECONDS.toHours(tempoInativoMillis);
-
         return horasInativo >= horasParaAbandono;
     }
 
@@ -82,21 +79,61 @@ public class ClaimManager {
         return ownerClaims;
     }
 
-    public boolean isAreaClaimed(Location pos1, Location pos2) {
+    // NOVO: Busca todas as claims sobrepostas na área
+    public List<Claim> getClaimsInArea(String worldName, int minX, int maxX, int minZ, int maxZ) {
+        List<Claim> result = new ArrayList<Claim>();
+        for (Claim claim : claims) {
+            if (!claim.getWorldName().equals(worldName)) continue;
+            if (minX <= claim.getMaxX() && maxX >= claim.getMinX() &&
+                    minZ <= claim.getMaxZ() && maxZ >= claim.getMinZ()) {
+                result.add(claim);
+            }
+        }
+        return result;
+    }
+
+    // NOVO: quantos blocos ainda não protegidos pelo próprio dono
+    public int getUnclaimedBlockCount(String owner, String worldName, int minX, int maxX, int minZ, int maxZ) {
+        int newBlocks = 0;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                boolean claimed = false;
+                for (Claim claim : getClaimsByOwner(owner)) {
+                    if (claim.getWorldName().equals(worldName)
+                            && x >= claim.getMinX() && x <= claim.getMaxX()
+                            && z >= claim.getMinZ() && z <= claim.getMaxZ()) {
+                        claimed = true; break;
+                    }
+                }
+                if (!claimed) newBlocks++;
+            }
+        }
+        return newBlocks;
+    }
+
+    // Refatorado com allowedOwner (pode passar player para só barrar terceiros)
+    public boolean isAreaClaimed(Location pos1, Location pos2, String allowedOwner) {
         int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
         int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
         int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-
+        String worldName = pos1.getWorld().getName();
         for (Claim existingClaim : claims) {
-            if (existingClaim.getWorldName().equals(pos1.getWorld().getName())) {
+            if (existingClaim.getWorldName().equals(worldName)) {
                 if (minX <= existingClaim.getMaxX() && maxX >= existingClaim.getMinX() &&
-                    minZ <= existingClaim.getMaxZ() && maxZ >= existingClaim.getMinZ()) {
-                    return true;
+                        minZ <= existingClaim.getMaxZ() && maxZ >= existingClaim.getMinZ()) {
+                    if (allowedOwner == null ||
+                            !existingClaim.getOwnerName().equalsIgnoreCase(allowedOwner)) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
+    }
+    // Sobrecarregado para uso antigo:
+    public boolean isAreaClaimed(Location pos1, Location pos2) {
+        return isAreaClaimed(pos1, pos2, null);
     }
 
     public void addClaim(Claim claim) {
@@ -169,7 +206,6 @@ public class ClaimManager {
             e.printStackTrace();
         }
     }
-
     public List<Claim> getAllClaims() {
         return this.claims;
     }
