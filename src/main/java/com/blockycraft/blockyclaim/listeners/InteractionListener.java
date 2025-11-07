@@ -68,7 +68,7 @@ public class InteractionListener extends PlayerListener {
                                     type == Material.YELLOW_FLOWER || type == Material.SAPLING || type == Material.SNOW;
                 
                 // CORREÇÃO: Lista de blocos que podem ser ATIVADOS com clique esquerdo
-                boolean isLeftClickInteractable = type == Material.WOODEN_DOOR || type == Material.LEVER || type == Material.STONE_BUTTON;
+                boolean isLeftClickInteractable = type == Material.LEVER || type == Material.STONE_BUTTON;
 
                 if (isFragile) {
                     event.setCancelled(true);
