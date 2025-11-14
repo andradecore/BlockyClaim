@@ -3,27 +3,33 @@ package com.blockycraft.blockyclaim.listeners;
 import com.blockycraft.blockyclaim.BlockyClaim;
 import com.blockycraft.blockyclaim.config.ConfigManager;
 import com.blockycraft.blockyclaim.data.Claim;
+import com.blockycraft.blockyclaim.lang.LanguageManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerListener;
 
-public class InteractionListener extends PlayerListener {
+import java.util.HashMap;
+import java.util.Map;
+
+public class InteractionListener implements Listener {
 
     private final BlockyClaim plugin;
+    private final LanguageManager langManager;
 
     public InteractionListener(BlockyClaim plugin) {
         this.plugin = plugin;
+        this.langManager = plugin.getLanguageManager();
     }
 
-    @Override
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Action action = event.getAction();
         
-        // Ignora cliques no ar, pois não envolvem blocos
         if (action == Action.LEFT_CLICK_AIR || action == Action.RIGHT_CLICK_AIR) {
             return;
         }
@@ -31,55 +37,45 @@ public class InteractionListener extends PlayerListener {
         Block clickedBlock = event.getClickedBlock();
         Claim claim = plugin.getClaimManager().getClaimAt(clickedBlock.getLocation());
 
-        // Se não houver claim no local, não há nada a fazer.
         if (claim == null) {
             return;
         }
 
-        // Se o jogador não tem permissão na claim, aplicamos as regras de proteção.
         if (!claim.hasPermission(player.getName())) {
             ConfigManager cfg = plugin.getConfigManager();
             Material type = clickedBlock.getType();
+            String lang = plugin.getGeoIPManager().getPlayerLanguage(player);
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("owner", claim.getOwnerName());
 
-            // --- LÓGICA PARA CLIQUE DIREITO (USAR ITENS) ---
             if (action == Action.RIGHT_CLICK_BLOCK) {
-                // Impede o uso da ferramenta de claim em terreno alheio
                 if (player.getItemInHand().getType() == cfg.getFerramentaClaim()) {
                     event.setCancelled(true);
                     return;
                 }
 
-                // Lista de blocos interativos protegidos contra clique direito
                 boolean isProtectedInteractable = type == Material.CHEST || type == Material.FURNACE || type == Material.BURNING_FURNACE ||
                                                   type == Material.WOODEN_DOOR || type == Material.IRON_DOOR_BLOCK || type == Material.LEVER ||
                                                   type == Material.STONE_BUTTON || type == Material.DISPENSER || type == Material.JUKEBOX;
 
                 if (isProtectedInteractable) {
                     event.setCancelled(true);
-                    player.sendMessage(cfg.getMsg("sem-permissao-interagir", "&cVoce nao pode interagir com blocos no terreno de &6{owner}&c.")
-                        .replace("{owner}", claim.getOwnerName()));
+                    player.sendMessage(langManager.get(lang, "sem-permissao-interagir", placeholders));
                 }
             }
             
-            // --- LÓGICA ATUALIZADA PARA CLIQUE ESQUERDO ---
             else if (action == Action.LEFT_CLICK_BLOCK) {
-                // Lista de blocos frágeis que podem ser quebrados com a mão
                 boolean isFragile = type == Material.GRASS || type == Material.LONG_GRASS || type == Material.RED_ROSE || 
                                     type == Material.YELLOW_FLOWER || type == Material.SAPLING || type == Material.SNOW;
                 
-                // CORREÇÃO: Lista de blocos que podem ser ATIVADOS com clique esquerdo
                 boolean isLeftClickInteractable = type == Material.LEVER || type == Material.STONE_BUTTON;
 
                 if (isFragile) {
                     event.setCancelled(true);
-                    // Usamos a mesma mensagem de "quebrar blocos" para consistência
-                    player.sendMessage(cfg.getMsg("sem-permissao-quebrar", "&cVoce nao pode quebrar blocos no terreno de &6{owner}&c.")
-                        .replace("{owner}", claim.getOwnerName()));
+                    player.sendMessage(langManager.get(lang, "sem-permissao-quebrar", placeholders));
                 } else if (isLeftClickInteractable) {
                     event.setCancelled(true);
-                    // Usamos a mensagem de "interagir" para consistência
-                    player.sendMessage(cfg.getMsg("sem-permissao-interagir", "&cVoce nao pode interagir com blocos no terreno de &6{owner}&c.")
-                        .replace("{owner}", claim.getOwnerName()));
+                    player.sendMessage(langManager.get(lang, "sem-permissao-interagir", placeholders));
                 }
             }
         }

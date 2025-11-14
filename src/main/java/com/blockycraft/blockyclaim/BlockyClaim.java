@@ -4,13 +4,13 @@ import com.blockycraft.blockyclaim.commands.CommandManager;
 import com.blockycraft.blockyclaim.config.ConfigManager;
 import com.blockycraft.blockyclaim.database.DatabaseManager;
 import com.blockycraft.blockyclaim.database.DatabaseManagerClaims;
+import com.blockycraft.blockyclaim.geoip.GeoIPManager;
+import com.blockycraft.blockyclaim.lang.LanguageManager;
 import com.blockycraft.blockyclaim.listeners.*;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
 import com.blockycraft.blockyclaim.visualization.VisualizationManager;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
@@ -24,11 +24,15 @@ public class BlockyClaim extends JavaPlugin {
     private VisualizationManager visualizationManager;
     private DatabaseManager databaseManager;
     private DatabaseManagerClaims databaseManagerClaims;
+    private LanguageManager languageManager;
+    private GeoIPManager geoIPManager;
 
     @Override
     public void onEnable() {
         instance = this;
         this.configManager = new ConfigManager(this);
+        this.languageManager = new LanguageManager(this);
+        this.geoIPManager = new GeoIPManager();
         this.claimManager = new ClaimManager(this);
         this.playerDataManager = new PlayerDataManager(this);
         this.visualizationManager = new VisualizationManager(this);
@@ -106,18 +110,19 @@ public class BlockyClaim extends JavaPlugin {
     public VisualizationManager getVisualizationManager() { return visualizationManager; }
     public DatabaseManager getDatabaseManager() { return databaseManager; }
     public DatabaseManagerClaims getDatabaseManagerClaims() { return databaseManagerClaims; }
+    public LanguageManager getLanguageManager() { return languageManager; }
+    public GeoIPManager getGeoIPManager() { return geoIPManager; }
 
     private void registerListeners() {
         PluginManager pm = getServer().getPluginManager();
 
-        pm.registerEvent(Type.PLAYER_JOIN, new PlayerJoinListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_QUIT, new PlayerQuitListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new ClaimToolListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_BREAK, new ProtectionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_PLACE, new ProtectionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new InteractionListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_MOVE, new BoundaryListener(this), Priority.Normal, this);
-        pm.registerEvent(Type.ENTITY_EXPLODE, new ExplosionListener(this), Priority.High, this);
+        pm.registerEvents(new PlayerJoinListener(this), this);
+        pm.registerEvents(new PlayerQuitListener(this), this);
+        pm.registerEvents(new ClaimToolListener(this), this);
+        pm.registerEvents(new ProtectionListener(this), this);
+        pm.registerEvents(new InteractionListener(this), this);
+        pm.registerEvents(new BoundaryListener(this), this);
+        pm.registerEvents(new ExplosionListener(this), this);
         System.out.println("[BlockyClaim] Listeners de eventos registrados.");
     }
 

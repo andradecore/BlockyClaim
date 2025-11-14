@@ -1,7 +1,6 @@
 package com.blockycraft.blockyclaim.config;
 
 import com.blockycraft.blockyclaim.BlockyClaim;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 import java.io.File;
@@ -112,16 +111,5 @@ public class ConfigManager {
 
     public boolean isAvisoFronteiraAtivado() {
         return getBoolean("funcionalidades.avisar-ao-entrar-na-claim", true);
-    }
-
-    public String getMsg(String path, String defaultValue) {
-        String prefix = getString("mensagens.prefixo", "");
-        String message = getString("mensagens." + path, defaultValue);
-        return ChatColor.translateAlternateColorCodes('&', prefix + message);
-    }
-
-    public String getRawMsg(String path, String defaultValue) {
-        String message = getString("mensagens." + path, defaultValue);
-        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

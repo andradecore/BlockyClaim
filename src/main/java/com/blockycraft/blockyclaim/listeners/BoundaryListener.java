@@ -3,23 +3,28 @@ package com.blockycraft.blockyclaim.listeners;
 import com.blockycraft.blockyclaim.BlockyClaim;
 import com.blockycraft.blockyclaim.config.ConfigManager;
 import com.blockycraft.blockyclaim.data.Claim;
+import com.blockycraft.blockyclaim.lang.LanguageManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class BoundaryListener extends PlayerListener {
+public class BoundaryListener implements Listener {
 
     private final BlockyClaim plugin;
+    private final LanguageManager langManager;
     private final Map<String, String> playerLastKnownClaimId = new HashMap<String, String>();
 
     public BoundaryListener(BlockyClaim plugin) {
         this.plugin = plugin;
+        this.langManager = plugin.getLanguageManager();
     }
 
-    @Override
+    @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Location from = event.getFrom();
         Location to = event.getTo();
@@ -37,33 +42,34 @@ public class BoundaryListener extends PlayerListener {
                 ConfigManager cfg = plugin.getConfigManager();
                 String ownerName = claimAtLocation.getOwnerName();
                 String playerName = player.getName();
+                String lang = plugin.getGeoIPManager().getPlayerLanguage(player);
                 
-                // Prioridade 1: Notificar sobre claim abandonada
                 if (plugin.getClaimManager().isAbandoned(claimAtLocation) && !playerName.equalsIgnoreCase(ownerName)) {
                     double custoOriginal = claimAtLocation.getSize() * cfg.getCustoPorBloco();
                     double percentualOcupar = cfg.getPercentualPrecoOcupar() / 100.0;
                     int custoFinal = (int) Math.ceil(custoOriginal * percentualOcupar);
                     String nomeItem = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
 
-                    player.sendMessage(cfg.getMsg("abandono.notificacao", "Este terreno esta abandonado!")
-                        .replace("{claim_name}", claimAtLocation.getClaimName())
-                        .replace("{cost}", String.valueOf(custoFinal))
-                        .replace("{item_name}", nomeItem));
+                    Map<String, String> placeholders = new HashMap<>();
+                    placeholders.put("claim_name", claimAtLocation.getClaimName());
+                    placeholders.put("cost", String.valueOf(custoFinal));
+                    placeholders.put("item_name", nomeItem);
+                    player.sendMessage(langManager.get(lang, "abandono.notificacao", placeholders));
                 
-                // Prioridade 2: Notificar sobre claim à venda
                 } else if (claimAtLocation.isForSale() && !playerName.equalsIgnoreCase(ownerName)) {
                     String nomeItem = cfg.getItemCompra().name().replace("_", " ").toLowerCase();
-                    player.sendMessage(cfg.getMsg("venda.a-venda-notificacao", "Este terreno esta a venda!")
-                        .replace("{claim_name}", claimAtLocation.getClaimName())
-                        .replace("{price}", String.valueOf(claimAtLocation.getSalePrice()))
-                        .replace("{item_name}", nomeItem));
+                    Map<String, String> placeholders = new HashMap<>();
+                    placeholders.put("claim_name", claimAtLocation.getClaimName());
+                    placeholders.put("price", String.valueOf(claimAtLocation.getSalePrice()));
+                    placeholders.put("item_name", nomeItem);
+                    player.sendMessage(langManager.get(lang, "venda.a-venda-notificacao", placeholders));
 
-                // Prioridade 3: Mensagem de boas-vindas normal
                 } else if (cfg.isAvisoFronteiraAtivado()) {
                     if (!claimAtLocation.hasPermission(playerName)) {
-                        player.sendMessage(cfg.getMsg("bem-vindo-claim", "&eVoce esta entrando em '&6{claim_name}&e' de &6{owner}&e.")
-                            .replace("{claim_name}", claimAtLocation.getClaimName())
-                            .replace("{owner}", ownerName));
+                        Map<String, String> placeholders = new HashMap<>();
+                        placeholders.put("claim_name", claimAtLocation.getClaimName());
+                        placeholders.put("owner", ownerName);
+                        player.sendMessage(langManager.get(lang, "bem-vindo-claim", placeholders));
                     }
                 }
                 playerLastKnownClaimId.put(player.getName(), currentClaimId);

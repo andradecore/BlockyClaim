@@ -3,10 +3,11 @@ package com.blockycraft.blockyclaim.listeners;
 import com.blockycraft.blockyclaim.BlockyClaim;
 import com.blockycraft.blockyclaim.managers.PlayerDataManager;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerListener;
 
-public class PlayerJoinListener extends PlayerListener {
+public class PlayerJoinListener implements Listener {
 
     private final BlockyClaim plugin;
 
@@ -14,7 +15,7 @@ public class PlayerJoinListener extends PlayerListener {
         this.plugin = plugin;
     }
 
-    @Override
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();

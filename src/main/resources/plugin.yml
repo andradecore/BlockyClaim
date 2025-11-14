@@ -3,7 +3,7 @@ main: com.blockycraft.blockyclaim.BlockyClaim
 version: 1.0
 author: Bernardo Zukerman
 description: Plugin de protecao de terreno com economia baseada em ferro.
-softdepend: [BlockyFactions]
+softdepend: [BlockyFactions, BlockyGeoIP]
 
 permissions:
   blockyclaim.*:
@@ -23,12 +23,14 @@ commands:
   claim:
     description: Compra e gerencia blocos de protecao.
     usage: /claim <comprar|saldo|confirm>
-    permission: blockyclaim.claim # <-- LINHA ADICIONADA
+    permission: blockyclaim.claim
   trust:
     description: Concede permissao a um jogador em seu terreno.
     usage: /trust <jogador>
-    permission: blockyclaim.trust # <-- LINHA ADICIONADA
+    permission: blockyclaim.trust
+    aliases: [confiar]
   untrust:
     description: Remove a permissao de um jogador em seu terreno.
     usage: /untrust <jogador>
-    permission: blockyclaim.untrust # <-- LINHA ADICIONADA
+    permission: blockyclaim.untrust
+    aliases: [negarconfianca, desconfiar]

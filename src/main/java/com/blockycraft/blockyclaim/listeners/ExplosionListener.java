@@ -4,10 +4,11 @@ import com.blockycraft.blockyclaim.BlockyClaim;
 import org.bukkit.Location;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityListener;
 
-public class ExplosionListener extends EntityListener {
+public class ExplosionListener implements Listener {
 
     private final BlockyClaim plugin;
 
@@ -15,7 +16,7 @@ public class ExplosionListener extends EntityListener {
         this.plugin = plugin;
     }
 
-    @Override
+    @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         Entity entity = event.getEntity();
         
